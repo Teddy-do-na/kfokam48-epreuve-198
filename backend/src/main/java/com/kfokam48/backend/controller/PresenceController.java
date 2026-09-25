@@ -1,5 +1,6 @@
 package com.kfokam48.backend.controller;
 
+import com.kfokam48.backend.dto.PresenceManuelleRequest;
 import com.kfokam48.backend.dto.PresenceRequest;
 import com.kfokam48.backend.dto.PresenceResponse;
 import com.kfokam48.backend.service.PresenceService;
@@ -24,5 +25,11 @@ public class PresenceController {
     public ResponseEntity<PresenceResponse> marquer(@Valid @RequestBody PresenceRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(presenceService.marquer(request.code(), request.etudiantId()));
+    }
+
+    @PostMapping("/manuelle")
+    public ResponseEntity<PresenceResponse> ajouterManuellement(@Valid @RequestBody PresenceManuelleRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(presenceService.ajouterManuellement(request.sessionId(), request.etudiantId()));
     }
 }
