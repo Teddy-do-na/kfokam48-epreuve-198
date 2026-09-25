@@ -5,4 +5,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface RelectureRepository extends JpaRepository<Relecture, Long> {
     boolean existsByExerciceIdAndStatut(Long exerciceId, String statut);
+    boolean existsByExerciceId(Long exerciceId);
 }

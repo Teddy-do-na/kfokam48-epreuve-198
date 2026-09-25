@@ -10,6 +10,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "session")
@@ -39,6 +41,12 @@ public class CoursSession {
 
     @Column(name = "cloturee_at")
     private Instant clotureeAt;
+
+    @jakarta.persistence.OneToMany(mappedBy = "session")
+    private List<Presence> presences = new ArrayList<>();
+
+    @jakarta.persistence.OneToMany(mappedBy = "session")
+    private List<Exercice> exercices = new ArrayList<>();
 
     protected CoursSession() {
     }
@@ -82,5 +90,13 @@ public class CoursSession {
 
     public Instant getClotureeAt() {
         return clotureeAt;
+    }
+
+    public List<Presence> getPresences() {
+        return presences;
+    }
+
+    public List<Exercice> getExercices() {
+        return exercices;
     }
 }

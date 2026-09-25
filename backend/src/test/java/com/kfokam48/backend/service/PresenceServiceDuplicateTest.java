@@ -29,12 +29,13 @@ class PresenceServiceDuplicateTest {
     @Mock private PresenceRepository presenceRepository;
     @Mock private TentativeCodeRepository tentativeCodeRepository;
     @Mock private TentativeCodeService tentativeCodeService;
+    @Mock private RelecteurAssignmentService assignmentService;
     private PresenceService service;
 
     @BeforeEach
     void setUp() {
         service = new PresenceService(sessionRepository, etudiantRepository, presenceRepository, tentativeCodeRepository,
-                tentativeCodeService, Clock.fixed(Instant.parse("2026-01-01T10:05:00Z"), ZoneOffset.UTC));
+                tentativeCodeService, assignmentService, Clock.fixed(Instant.parse("2026-01-01T10:05:00Z"), ZoneOffset.UTC));
     }
 
     @Test
