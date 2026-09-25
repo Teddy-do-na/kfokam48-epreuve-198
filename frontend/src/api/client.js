@@ -18,6 +18,7 @@ export const api = {
   remplacerExercice: async (id, data) => (await client.put(`/exercices/${id}`, data)).data,
   soumettreRelecture: async (id, data) => (await client.post(`/relectures/${id}`, data)).data,
   getRelecturesEtudiant: async etudiantId => (await client.get(`/etudiants/${etudiantId}/relectures`)).data,
+  getRelecturesAssignees: async etudiantId => (await client.get(`/etudiants/${etudiantId}/relectures-assignees`)).data,
   getTableau: async promotionId => (await client.get('/tableau', { params: { promotionId } })).data,
   ajouterPresenceManuelle: async data => (await client.post('/presences/manuelle', data)).data,
   cloturerSession: async id => (await client.post(`/sessions/${id}/cloture`)).data,
