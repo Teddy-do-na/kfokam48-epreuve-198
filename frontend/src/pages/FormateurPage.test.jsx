@@ -22,12 +22,13 @@ describe('FormateurPage', () => {
   })
 
   it('charge et affiche le tableau de suivi', async () => {
-    api.getTableau.mockResolvedValue([{ etudiantId: 9, nom: 'Ada', presences: 2, exercicesDeposes: 1, moyenne: 18, relecturesEnAttente: 0 }])
+    api.getTableau.mockResolvedValue([{ etudiantId: 9, nom: 'Ada', presences: 2, exercicesDeposes: 1, moyenne: 18, relecturesEnAttente: 0, exercicesSansAssignation: 0 }])
     render(<FormateurPage />)
     fireEvent.change(screen.getByLabelText('Promotion à consulter'), { target: { value: '2' } })
     fireEvent.click(screen.getByRole('button', { name: 'Afficher le tableau' }))
 
     expect(await screen.findByText('Ada')).toBeTruthy()
+    expect(screen.getByText('0', { selector: 'td:last-child' })).toBeTruthy()
     expect(api.getTableau).toHaveBeenCalledWith(2)
   })
 

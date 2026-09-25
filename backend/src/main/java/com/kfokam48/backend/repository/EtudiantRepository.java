@@ -13,7 +13,10 @@ public interface EtudiantRepository extends JpaRepository<Etudiant, Long> {
             "(select count(x) from Exercice x where x.etudiant = e and x.session.promotion.id = :promotionId), " +
             "(select avg(r.note) from Relecture r where r.exercice.etudiant = e and r.exercice.session.promotion.id = :promotionId), " +
             "(select count(x) from Exercice x where x.etudiant = e and x.session.promotion.id = :promotionId " +
-            "and not exists (select r from Relecture r where r.exercice = x and r.statut = 'RENDUE'))) " +
+            "and not exists (select r from Relecture r where r.exercice = x and r.statut = 'RENDUE')), " +
+            "(select count(x) from Exercice x where x.etudiant = e and x.session.promotion.id = :promotionId " +
+            "and not exists (select r from Relecture r where r.exercice = x))) " +
             "from Etudiant e where e.promotion.id = :promotionId order by e.id")
     List<TableauEtudiantResponse> findTableauByPromotionId(@Param("promotionId") Long promotionId);
+
 }

@@ -32,6 +32,18 @@ class TableauServiceTest {
     }
 
     @Test
+    void compteUnExerciceSansRelectureCommeUneAssignationEnAttente() {
+        when(promotionRepository.existsById(3L)).thenReturn(true);
+        when(etudiantRepository.findTableauByPromotionId(3L))
+                .thenReturn(List.of(new TableauEtudiantResponse(9L, "Ada", 1L, 1L, null, 1L, 1L)));
+
+        var result = new TableauService(promotionRepository, etudiantRepository).consulter(3L);
+
+        assertEquals(1L, result.get(0).relecturesEnAttente());
+        assertEquals(1L, result.get(0).exercicesSansAssignation());
+    }
+
+    @Test
     void refuseUnePromotionInexistante() {
         when(promotionRepository.existsById(99L)).thenReturn(false);
 
