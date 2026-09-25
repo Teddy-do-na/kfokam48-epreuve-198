@@ -28,7 +28,8 @@ export default function EtudiantPage() {
     try {
       await action()
     } catch (error) {
-      setErreur(error.message || messages.genericError)
+      const retryDelay = error.reessayerDansSecondes ? ` Réessayez dans ${error.reessayerDansSecondes} secondes.` : ''
+      setErreur(`${error.message || messages.genericError}${retryDelay}`)
     } finally {
       setChargement(false)
     }
