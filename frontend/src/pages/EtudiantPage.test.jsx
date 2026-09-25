@@ -16,7 +16,6 @@ describe('EtudiantPage attendance', () => {
     fireEvent.change(screen.getByLabelText('Identifiant étudiant'), { target: { value: '9' } })
     fireEvent.change(screen.getByLabelText('Code de présence'), { target: { value: 'abc234' } })
     fireEvent.click(screen.getByRole('button', { name: 'Valider ma présence' }))
-
     expect((await screen.findByRole('status')).textContent).toBe('Votre présence a bien été enregistrée.')
     expect(api.marquerPresence).toHaveBeenCalledWith({ code: 'ABC234', etudiantId: 9 })
   })
@@ -27,7 +26,15 @@ describe('EtudiantPage attendance', () => {
     fireEvent.change(screen.getByLabelText('Identifiant étudiant'), { target: { value: '9' } })
     fireEvent.change(screen.getByLabelText('Code de présence'), { target: { value: 'ABC234' } })
     fireEvent.click(screen.getByRole('button', { name: 'Valider ma présence' }))
-
     expect((await screen.findByRole('alert')).textContent).toContain('déjà enregistrée')
+  })
+
+  it('indique à l’étudiant le délai restant après cinq erreurs', async () => {
+    api.marquerPresence.mockRejectedValue({ code: 'ETUDIANT_BLOQUE', message: 'Trop de codes incorrects.', reessayerDansSecondes: 68 })
+    render(<EtudiantPage />)
+    fireEvent.change(screen.getByLabelText('Identifiant étudiant'), { target: { value: '9' } })
+    fireEvent.change(screen.getByLabelText('Code de présence'), { target: { value: 'ABC234' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Valider ma présence' }))
+    expect((await screen.findByRole('alert')).textContent).toContain('Réessayez dans 68 secondes.')
   })
 })
