@@ -16,7 +16,7 @@ cd frontend && npm install && npm run dev   # démarre le front sur :5173 (Node.
 Le frontend proxifie `/api` vers `http://localhost:8080` (voir `frontend/vite.config.js`).
 
 ## Données de démonstration
-À charger via une migration Flyway dédiée (ex. `V2__donnees_demo.sql`) : une promotion, quelques étudiants, une session ouverte.
+Au premier démarrage, Flyway crée automatiquement une promotion et trois étudiants de démonstration, ainsi qu’une session ouverte avec le code `DEMO48` (valable 15 minutes).
 
 ## Documentation
 - Cahier des charges : `docs/CAHIER_DES_CHARGES.md`

@@ -1,0 +1,14 @@
+# Dépendances et artefacts de build
+node_modules/
+frontend/dist/
+backend/target/
+*.class
+
+# OS / éditeurs
+.DS_Store
+.idea/
+.vscode/
+*.iml
+
+# Logs
+*.log
