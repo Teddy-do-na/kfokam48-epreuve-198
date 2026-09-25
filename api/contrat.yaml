@@ -1,0 +1,142 @@
+openapi: 3.0.3
+info:
+  title: KFOKAM48 - API suivi de présence et relecture
+  version: "1.0"
+paths:
+  /api/sessions:
+    post:
+      summary: Ouvrir une session de cours
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [titre, promotionId]
+              properties:
+                titre: { type: string }
+                promotionId: { type: integer }
+      responses:
+        '201':
+          description: Session créée
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: integer }
+                  code: { type: string }
+                  ouvertureAt: { type: string, format: date-time }
+                  expirationAt: { type: string, format: date-time }
+        '400':
+          description: champ manquant
+
+  /api/presences:
+    post:
+      summary: Marquer sa présence avec un code
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code, etudiantId]
+              properties:
+                code: { type: string }
+                etudiantId: { type: integer }
+      responses:
+        '201':
+          description: Présence enregistrée
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: integer }
+                  sessionId: { type: integer }
+                  etudiantId: { type: integer }
+                  source: { type: string, enum: [ETUDIANT, FORMATEUR] }
+        '400': { description: code inconnu }
+        '409': { description: déjà présent }
+        '410': { description: code expiré }
+
+  /api/exercices:
+    post:
+      summary: Déposer le lien de son exercice
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sessionId, etudiantId, lien]
+              properties:
+                sessionId: { type: integer }
+                etudiantId: { type: integer }
+                lien: { type: string }
+      responses:
+        '201':
+          description: Exercice déposé
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: integer }
+                  statut: { type: string }
+        '400': { description: lien invalide }
+        '409': { description: exercice déjà déposé }
+
+  /api/relectures/{id}:
+    post:
+      summary: Rendre une relecture (note et commentaire)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [note, commentaire]
+              properties:
+                note: { type: integer, minimum: 0, maximum: 20 }
+                commentaire: { type: string }
+      responses:
+        '200': { description: Relecture enregistrée }
+        '400': { description: note hors 0-20 ou non entière }
+        '403': { description: relecture de son propre exercice }
+        '409': { description: relecture déjà rendue }
+
+  /api/tableau:
+    get:
+      summary: Tableau de suivi par promotion
+      parameters:
+        - name: promotionId
+          in: query
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Tableau de suivi
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    etudiantId: { type: integer }
+                    nom: { type: string }
+                    presences: { type: integer }
+                    exercicesDeposes: { type: integer }
+                    moyenne: { type: number }
+                    relecturesEnAttente: { type: integer }
+        '404': { description: promotion inconnue }
+
+components:
+  schemas:
+    ApiError:
+      type: object
+      properties:
+        code: { type: string }
+        message: { type: string }
