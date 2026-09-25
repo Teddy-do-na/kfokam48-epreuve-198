@@ -1,5 +1,6 @@
 package com.kfokam48.backend.service;
 
+import com.kfokam48.backend.dto.RelectureEtudiantResponse;
 import com.kfokam48.backend.dto.SoumettreRelectureRequest;
 import com.kfokam48.backend.entity.Etudiant;
 import com.kfokam48.backend.entity.Relecture;
@@ -10,6 +11,7 @@ import java.time.Clock;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.List;
 
 @Service
 public class RelectureService {
@@ -21,6 +23,15 @@ public class RelectureService {
         this.relectureRepository = relectureRepository;
         this.etudiantRepository = etudiantRepository;
         this.clock = clock;
+    }
+
+    @Transactional(readOnly = true)
+    public List<RelectureEtudiantResponse> consulterParEtudiant(Long etudiantId) {
+        return relectureRepository.findByExerciceEtudiantId(etudiantId).stream()
+                .map(relecture -> new RelectureEtudiantResponse(relecture.getId(),
+                        relecture.getNote() == null ? null : relecture.getNote().intValue(),
+                        relecture.getCommentaire(), relecture.getStatut()))
+                .toList();
     }
 
     @Transactional
