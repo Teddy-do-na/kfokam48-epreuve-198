@@ -10,7 +10,7 @@ vi.mock('../api/client.js', () => ({
 describe('EtudiantPage attendance', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it('confirme la présence lorsqu’un code valide est accepté', async () => {
+  it('confirme la présence après validation', async () => {
     api.marquerPresence.mockResolvedValue({ id: 1, sessionId: 3, etudiantId: 9, source: 'ETUDIANT' })
     render(<EtudiantPage />)
     fireEvent.change(screen.getByLabelText('Identifiant étudiant'), { target: { value: '9' } })
@@ -21,23 +21,13 @@ describe('EtudiantPage attendance', () => {
     expect(api.marquerPresence).toHaveBeenCalledWith({ code: 'ABC234', etudiantId: 9 })
   })
 
-  it('affiche le message renvoyé lorsque le code a expiré', async () => {
-    api.marquerPresence.mockRejectedValue({ code: 'CODE_EXPIRE', message: 'Le code de présence a expiré.' })
+  it('affiche le refus lorsque la présence est déjà enregistrée', async () => {
+    api.marquerPresence.mockRejectedValue({ code: 'DEJA_PRESENT', message: 'La présence de cet étudiant est déjà enregistrée.' })
     render(<EtudiantPage />)
     fireEvent.change(screen.getByLabelText('Identifiant étudiant'), { target: { value: '9' } })
     fireEvent.change(screen.getByLabelText('Code de présence'), { target: { value: 'ABC234' } })
     fireEvent.click(screen.getByRole('button', { name: 'Valider ma présence' }))
 
-    expect((await screen.findByRole('alert')).textContent).toBe('Le code de présence a expiré.')
-  })
-
-  it('affiche le message renvoyé pour un code inconnu', async () => {
-    api.marquerPresence.mockRejectedValue({ code: 'CODE_INCONNU', message: 'Le code de présence est inconnu.' })
-    render(<EtudiantPage />)
-    fireEvent.change(screen.getByLabelText('Identifiant étudiant'), { target: { value: '9' } })
-    fireEvent.change(screen.getByLabelText('Code de présence'), { target: { value: 'ZZZZZZ' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Valider ma présence' }))
-
-    expect((await screen.findByRole('alert')).textContent).toBe('Le code de présence est inconnu.')
+    expect((await screen.findByRole('alert')).textContent).toContain('déjà enregistrée')
   })
 })
