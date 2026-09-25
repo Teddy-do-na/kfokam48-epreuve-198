@@ -12,6 +12,7 @@ import java.security.SecureRandom;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +26,7 @@ public class SessionService {
     private final Clock clock;
     private final SecureRandom secureRandom;
 
+    @Autowired
     public SessionService(CoursSessionRepository sessionRepository, PromotionRepository promotionRepository, Clock clock) {
         this(sessionRepository, promotionRepository, clock, new SecureRandom());
     }

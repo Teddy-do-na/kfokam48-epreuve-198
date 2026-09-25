@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +19,7 @@ public class RelecteurAssignmentService {
     private final RelectureRepository relectureRepository;
     private final SecureRandom random;
 
+    @Autowired
     public RelecteurAssignmentService(RelectureRepository relectureRepository) {
         this(relectureRepository, new SecureRandom());
     }
