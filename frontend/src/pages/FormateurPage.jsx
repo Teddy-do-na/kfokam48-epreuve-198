@@ -10,6 +10,7 @@ export default function FormateurPage() {
   const [titre, setTitre] = useState('')
   const [promotionId, setPromotionId] = useState('')
   const [session, setSession] = useState(null)
+  const [sessionCloturee, setSessionCloturee] = useState(false)
   const [etudiantId, setEtudiantId] = useState('')
   const [tableauPromotionId, setTableauPromotionId] = useState('')
   const [tableau, setTableau] = useState([])
@@ -26,6 +27,7 @@ export default function FormateurPage() {
     try {
       const resultat = await api.ouvrirSession({ titre: titre.trim(), promotionId: Number(promotionId) })
       setSession(resultat)
+      setSessionCloturee(false)
     } catch (error) {
       setErreur(error.message || copy.error)
     } finally {
@@ -44,6 +46,19 @@ export default function FormateurPage() {
       setEtudiantId('')
     } catch (error) {
       setErreur(error.message || 'Impossible d’ajouter cette présence.')
+    } finally {
+      setChargement(false)
+    }
+  }
+
+  async function cloturerSession() {
+    setErreur('')
+    setChargement(true)
+    try {
+      await api.cloturerSession(session.id)
+      setSessionCloturee(true)
+    } catch (error) {
+      setErreur(error.message || 'Impossible de clôturer la session.')
     } finally {
       setChargement(false)
     }
@@ -94,7 +109,8 @@ export default function FormateurPage() {
           {session ? <div className="mt-12"><p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Code de présence</p><p className="mt-3 break-all font-mono text-5xl font-semibold tracking-[0.18em] text-white sm:text-6xl">{session.code}</p><p className="mt-5 text-sm text-slate-300">Valable jusqu’au {new Date(session.expirationAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</p></div> : <div className="mt-12"><p className="text-2xl font-medium">Votre code apparaîtra ici.</p><p className="mt-3 max-w-sm text-sm leading-6 text-slate-400">Créez une session pour générer un code sécurisé, partageable avec la promotion.</p></div>}
         </div>
         {session && <div className="relative mt-10 space-y-4">
-          <p role="status" className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-teal-100">Session ouverte. Le code est valable pendant 15 minutes.</p>
+          <p role="status" className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-teal-100">{sessionCloturee ? 'Session clôturée. Les dépôts et les notes ne peuvent plus être modifiés.' : 'Session ouverte. Le code est valable pendant 15 minutes.'}</p>
+          {!sessionCloturee && <button type="button" disabled={chargement} onClick={cloturerSession} className="w-full rounded-xl border border-rose-300/30 bg-rose-400/10 px-4 py-3 text-sm font-semibold text-rose-100 disabled:opacity-50">Clôturer la session</button>}
           <form onSubmit={ajouterPresence} className="rounded-2xl border border-white/10 bg-white/5 p-4">
             <label htmlFor="presenceManuelle" className="text-sm font-semibold text-white">Ajouter une présence manuellement</label>
             <div className="mt-3 flex gap-2">

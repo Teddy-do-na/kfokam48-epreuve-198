@@ -3,8 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import FormateurPage from './FormateurPage.jsx'
 import { api } from '../api/client.js'
 
-vi.mock('../api/client.js', () => ({
-  api: { ouvrirSession: vi.fn(), getTableau: vi.fn(), cloturerSession: vi.fn() },
+vi.mock('../api/client.js', () => ({    api: { ouvrirSession: vi.fn(), getTableau: vi.fn(), cloturerSession: vi.fn(), ajouterPresenceManuelle: vi.fn() },
 }))
 
 describe('FormateurPage', () => {
@@ -19,6 +18,20 @@ describe('FormateurPage', () => {
 
     expect((await screen.findByText('AB23CD')).textContent).toBe('AB23CD')
     expect(api.ouvrirSession).toHaveBeenCalledWith({ titre: 'Développement web', promotionId: 2 })
+  })
+
+  it('permet de clôturer la session ouverte', async () => {
+    api.ouvrirSession.mockResolvedValue({ id: 4, code: 'AB23CD', ouvertureAt: '2026-01-01T10:00:00Z', expirationAt: '2026-01-01T10:15:00Z' })
+    api.cloturerSession.mockResolvedValue({ id: 4, clotureeAt: '2026-01-01T11:00:00Z' })
+    render(<FormateurPage />)
+    fireEvent.change(screen.getByLabelText('Intitulé du cours'), { target: { value: 'Développement web' } })
+    fireEvent.change(screen.getByLabelText('Identifiant de promotion', { selector: '#promotionId' }), { target: { value: '2' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Ouvrir la session' }))
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Clôturer la session' }))
+
+    expect(await screen.findByText('Session clôturée. Les dépôts et les notes ne peuvent plus être modifiés.')).toBeTruthy()
+    expect(api.cloturerSession).toHaveBeenCalledWith(4)
   })
 
   it('charge et affiche le tableau de suivi', async () => {
