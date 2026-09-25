@@ -35,6 +35,9 @@ public class RelectureService {
         if (!relecture.getRelecteur().getId().equals(etudiant.getId())) {
             throw new ApiException(HttpStatus.FORBIDDEN, "RELECTEUR_NON_ASSIGNE", "Cet étudiant n’est pas le relecteur assigné.");
         }
+        if (relecture.getExercice().getSession().isCloturee()) {
+            throw new ApiException(HttpStatus.CONFLICT, "SESSION_CLOTUREE", "La session est clôturée et n’accepte plus de modification.");
+        }
         relecture.soumettre(request.note().shortValue(), request.commentaire().trim(), clock.instant());
     }
 }
