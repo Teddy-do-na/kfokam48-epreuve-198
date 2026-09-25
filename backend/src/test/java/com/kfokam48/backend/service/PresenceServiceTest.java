@@ -8,6 +8,8 @@ import com.kfokam48.backend.entity.CoursSession;
 import com.kfokam48.backend.entity.Promotion;
 import com.kfokam48.backend.exception.ApiException;
 import com.kfokam48.backend.repository.CoursSessionRepository;
+import com.kfokam48.backend.repository.EtudiantRepository;
+import com.kfokam48.backend.repository.PresenceRepository;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -22,11 +24,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class PresenceServiceTest {
     @Mock
     private CoursSessionRepository sessionRepository;
+    @Mock
+    private EtudiantRepository etudiantRepository;
+    @Mock
+    private PresenceRepository presenceRepository;
     private PresenceService service;
 
     @BeforeEach
     void setUp() {
-        service = new PresenceService(sessionRepository,
+        service = new PresenceService(sessionRepository, etudiantRepository, presenceRepository,
                 Clock.fixed(Instant.parse("2026-01-01T10:15:00Z"), ZoneOffset.UTC));
     }
 
