@@ -9,6 +9,7 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,7 +37,7 @@ public class RelecteurAssignmentService {
         var idsCandidats = new HashSet<Long>();
         for (var presence : session.getPresences()) {
             Etudiant candidate = presence.getEtudiant();
-            if (!candidate.getId().equals(exercice.getEtudiant().getId()) && idsCandidats.add(candidate.getId())) {
+            if (!Objects.equals(candidate.getId(), exercice.getEtudiant().getId()) && idsCandidats.add(candidate.getId())) {
                 candidats.add(candidate);
             }
         }

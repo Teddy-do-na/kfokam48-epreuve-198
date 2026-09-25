@@ -176,6 +176,7 @@ paths:
                     exercicesDeposes: { type: integer }
                     moyenne: { type: number }
                     relecturesEnAttente: { type: integer }
+                    exercicesSansAssignation: { type: integer }
         '404': { description: promotion inconnue }
 
 components:

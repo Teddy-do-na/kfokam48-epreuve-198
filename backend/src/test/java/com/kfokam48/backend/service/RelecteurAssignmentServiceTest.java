@@ -48,6 +48,31 @@ class RelecteurAssignmentServiceTest {
     }
 
     @Test
+    void reevalueLesExercicesSansAssignationQuandUnPairArrive() {
+        RelecteurAssignmentService service = new RelecteurAssignmentService(relectureRepository, new java.security.SecureRandom());
+        Promotion promotion = new Promotion("Promotion A");
+        Etudiant auteur = new Etudiant("Auteur", promotion);
+        Etudiant pair = new Etudiant("Pair", promotion);
+        ReflectionTestUtils.setField(auteur, "id", 1L);
+        ReflectionTestUtils.setField(pair, "id", 2L);
+        CoursSession session = new CoursSession("Cours", promotion, "ABC234", Instant.now(), Instant.now().plusSeconds(60));
+        session.getPresences().add(new Presence(session, auteur, "ETUDIANT"));
+        Exercice exercice = new Exercice(session, auteur, "https://example.org/work", Instant.now());
+        session.getExercices().add(exercice);
+        when(relectureRepository.existsByExerciceId(null)).thenReturn(false);
+        when(relectureRepository.save(any(Relecture.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        service.assigner(exercice);
+        verify(relectureRepository, never()).save(any());
+        session.getPresences().add(new Presence(session, pair, "ETUDIANT"));
+        service.reassignerEnAttente(session);
+
+        var captor = org.mockito.ArgumentCaptor.forClass(Relecture.class);
+        verify(relectureRepository).save(captor.capture());
+        assertEquals(pair, captor.getValue().getRelecteur());
+    }
+
+    @Test
     void resteSansAssignationLorsqueSeulAuteurEstPresent() {
         RelecteurAssignmentService service = new RelecteurAssignmentService(relectureRepository);
         Promotion promotion = new Promotion("Promotion A");

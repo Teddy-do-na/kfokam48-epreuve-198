@@ -25,7 +25,6 @@ class TableauServiceTest {
         var expected = List.of(new TableauEtudiantResponse(9L, "Ada", 2L, 1L, 18.0, 0L));
         when(promotionRepository.existsById(3L)).thenReturn(true);
         when(etudiantRepository.findTableauByPromotionId(3L)).thenReturn(expected);
-        when(etudiantRepository.countExercicesSansRelecture(9L, 3L)).thenReturn(0L);
 
         var result = new TableauService(promotionRepository, etudiantRepository).consulter(3L);
 
@@ -36,12 +35,12 @@ class TableauServiceTest {
     void compteUnExerciceSansRelectureCommeUneAssignationEnAttente() {
         when(promotionRepository.existsById(3L)).thenReturn(true);
         when(etudiantRepository.findTableauByPromotionId(3L))
-                .thenReturn(List.of(new TableauEtudiantResponse(9L, "Ada", 1L, 1L, null, 1L)));
-        when(etudiantRepository.countExercicesSansRelecture(9L, 3L)).thenReturn(1L);
+                .thenReturn(List.of(new TableauEtudiantResponse(9L, "Ada", 1L, 1L, null, 1L, 1L)));
 
         var result = new TableauService(promotionRepository, etudiantRepository).consulter(3L);
 
-        assertEquals(2L, result.get(0).relecturesEnAttente());
+        assertEquals(1L, result.get(0).relecturesEnAttente());
+        assertEquals(1L, result.get(0).exercicesSansAssignation());
     }
 
     @Test
@@ -54,6 +53,5 @@ class TableauServiceTest {
         assertEquals(404, exception.getStatus().value());
         assertEquals("PROMOTION_INTROUVABLE", exception.getCode());
         verify(etudiantRepository, org.mockito.Mockito.never()).findTableauByPromotionId(99L);
-        verify(etudiantRepository, org.mockito.Mockito.never()).countExercicesSansRelecture(99L, 99L);
     }
 }

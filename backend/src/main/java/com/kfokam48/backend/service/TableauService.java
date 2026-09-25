@@ -24,10 +24,6 @@ public class TableauService {
         if (!promotionRepository.existsById(promotionId)) {
             throw new ApiException(HttpStatus.NOT_FOUND, "PROMOTION_INTROUVABLE", "La promotion demandée est introuvable.");
         }
-        return etudiantRepository.findTableauByPromotionId(promotionId).stream()
-                .map(etudiant -> new TableauEtudiantResponse(etudiant.etudiantId(), etudiant.nom(), etudiant.presences(),
-                        etudiant.exercicesDeposes(), etudiant.moyenne(),
-                        etudiant.relecturesEnAttente() + etudiantRepository.countExercicesSansRelecture(etudiant.etudiantId(), promotionId)))
-                .toList();
+        return etudiantRepository.findTableauByPromotionId(promotionId);
     }
 }
