@@ -120,8 +120,8 @@ export default function FormateurPage() {
         </form>
         {tableauCharge && <div className="overflow-x-auto rounded-xl border border-slate-200">
           <table className="w-full min-w-[680px] text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500"><tr><th className="px-4 py-3">Étudiant</th><th className="px-4 py-3">Présences</th><th className="px-4 py-3">Exercices</th><th className="px-4 py-3">Moyenne</th><th className="px-4 py-3">Relectures en attente</th></tr></thead>
-            <tbody className="divide-y divide-slate-100 bg-white">{tableau.map(etudiant => <tr key={etudiant.etudiantId}><th scope="row" className="px-4 py-3 font-semibold text-slate-900">{etudiant.nom}</th><td className="px-4 py-3">{etudiant.presences}</td><td className="px-4 py-3">{etudiant.exercicesDeposes}</td><td className="px-4 py-3">{etudiant.moyenne == null ? '—' : `${Number(etudiant.moyenne).toFixed(1)} / 20`}</td><td className="px-4 py-3">{etudiant.relecturesEnAttente}</td></tr>)}</tbody>
+            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500"><tr><th className="px-4 py-3">Étudiant</th><th className="px-4 py-3">Présences</th><th className="px-4 py-3">Exercices</th><th className="px-4 py-3">Moyenne</th><th className="px-4 py-3">Relectures en attente</th><th className="px-4 py-3">En attente d’assignation</th></tr></thead>
+            <tbody className="divide-y divide-slate-100 bg-white">{tableau.map(etudiant => <tr key={etudiant.etudiantId}><th scope="row" className="px-4 py-3 font-semibold text-slate-900">{etudiant.nom}</th><td className="px-4 py-3">{etudiant.presences}</td><td className="px-4 py-3">{etudiant.exercicesDeposes}</td><td className="px-4 py-3">{etudiant.moyenne == null ? '—' : `${Number(etudiant.moyenne).toFixed(1)} / 20`}</td><td className="px-4 py-3">{etudiant.relecturesEnAttente}</td><td className="px-4 py-3">{etudiant.exercicesSansAssignation || 0}</td></tr>)}</tbody>
           </table>
           {tableau.length === 0 && <p className="px-4 py-5 text-sm text-slate-600">Aucun étudiant dans cette promotion.</p>}
         </div>}
