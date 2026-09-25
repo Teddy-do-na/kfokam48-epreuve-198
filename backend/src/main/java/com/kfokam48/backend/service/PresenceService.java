@@ -46,6 +46,22 @@ public class PresenceService {
     }
 
     @Transactional
+    public PresenceResponse ajouterManuellement(Long sessionId, Long etudiantId) {
+        CoursSession session = sessionRepository.findById(sessionId)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "SESSION_INTROUVABLE", "La session demandée est introuvable."));
+        Etudiant etudiant = etudiantRepository.findById(etudiantId)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "ETUDIANT_INTROUVABLE", "L’étudiant demandé est introuvable."));
+        if (!session.getPromotion().getId().equals(etudiant.getPromotion().getId())) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "PROMOTION_INCORRECTE", "Cet étudiant ne fait pas partie de la promotion de la session.");
+        }
+        if (presenceRepository.existsBySessionIdAndEtudiantId(sessionId, etudiantId)) {
+            throw new ApiException(HttpStatus.CONFLICT, "DEJA_PRESENT", "La présence de cet étudiant est déjà enregistrée.");
+        }
+        Presence saved = presenceRepository.save(new Presence(session, etudiant, "FORMATEUR"));
+        return new PresenceResponse(saved.getId(), sessionId, etudiantId, saved.getSource());
+    }
+
+    @Transactional
     public PresenceResponse marquer(String code, Long etudiantId) {
         Etudiant etudiant = etudiantRepository.findById(etudiantId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "ETUDIANT_INTROUVABLE", "L’étudiant demandé est introuvable."));
