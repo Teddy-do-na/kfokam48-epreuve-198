@@ -16,4 +16,8 @@ public interface EtudiantRepository extends JpaRepository<Etudiant, Long> {
             "and not exists (select r from Relecture r where r.exercice = x and r.statut = 'RENDUE'))) " +
             "from Etudiant e where e.promotion.id = :promotionId order by e.id")
     List<TableauEtudiantResponse> findTableauByPromotionId(@Param("promotionId") Long promotionId);
+
+    @Query("select count(x) from Exercice x where x.etudiant.id = :etudiantId and x.session.promotion.id = :promotionId " +
+            "and not exists (select r from Relecture r where r.exercice = x)")
+    long countExercicesSansRelecture(@Param("etudiantId") Long etudiantId, @Param("promotionId") Long promotionId);
 }
