@@ -21,7 +21,7 @@ export default function RelecteurPage() {
     setChargement(true)
     try {
       await api.soumettreRelecture(relectureId, { etudiantId: Number(etudiantId), note: Number(note), commentaire: commentaire.trim() })
-      setMessage('Votre relecture a été enregistrée. Vous pourrez la corriger avant la clôture de la session.')
+      setMessage('Votre relecture a été enregistrée. Vous pouvez la corriger avant la clôture de la session.')
     } catch (error) {
       setErreur(error.message || 'Impossible d’enregistrer la relecture. Vérifiez vos informations.')
     } finally {
