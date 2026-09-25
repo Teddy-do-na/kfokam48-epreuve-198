@@ -9,6 +9,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "etudiant")
@@ -23,6 +25,9 @@ public class Etudiant {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "promotion_id", nullable = false)
     private Promotion promotion;
+
+    @jakarta.persistence.OneToMany(mappedBy = "etudiant")
+    private List<Presence> presences = new ArrayList<>();
 
     protected Etudiant() {
     }
@@ -42,5 +47,9 @@ public class Etudiant {
 
     public Promotion getPromotion() {
         return promotion;
+    }
+
+    public List<Presence> getPresences() {
+        return presences;
     }
 }

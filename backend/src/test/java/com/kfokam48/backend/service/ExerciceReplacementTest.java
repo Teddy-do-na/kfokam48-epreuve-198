@@ -29,11 +29,12 @@ class ExerciceReplacementTest {
     @Mock private EtudiantRepository etudiantRepository;
     @Mock private ExerciceRepository exerciceRepository;
     @Mock private RelectureRepository relectureRepository;
+    @Mock private RelecteurAssignmentService assignmentService;
     private ExerciceService service;
 
     @BeforeEach
     void setUp() {
-        service = new ExerciceService(sessionRepository, etudiantRepository, exerciceRepository, relectureRepository,
+        service = new ExerciceService(sessionRepository, etudiantRepository, exerciceRepository, relectureRepository, assignmentService,
                 Clock.fixed(Instant.parse("2026-01-01T10:30:00Z"), ZoneOffset.UTC));
     }
 

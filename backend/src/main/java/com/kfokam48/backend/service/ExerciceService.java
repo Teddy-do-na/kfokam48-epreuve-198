@@ -23,14 +23,17 @@ public class ExerciceService {
     private final EtudiantRepository etudiantRepository;
     private final ExerciceRepository exerciceRepository;
     private final RelectureRepository relectureRepository;
+    private final RelecteurAssignmentService assignmentService;
     private final Clock clock;
 
     public ExerciceService(CoursSessionRepository sessionRepository, EtudiantRepository etudiantRepository,
-                           ExerciceRepository exerciceRepository, RelectureRepository relectureRepository, Clock clock) {
+                           ExerciceRepository exerciceRepository, RelectureRepository relectureRepository,
+                           RelecteurAssignmentService assignmentService, Clock clock) {
         this.sessionRepository = sessionRepository;
         this.etudiantRepository = etudiantRepository;
         this.exerciceRepository = exerciceRepository;
         this.relectureRepository = relectureRepository;
+        this.assignmentService = assignmentService;
         this.clock = clock;
     }
 
@@ -52,6 +55,7 @@ public class ExerciceService {
         }
         Instant now = clock.instant();
         Exercice exercice = exerciceRepository.save(new Exercice(session, etudiant, request.lien().trim(), now));
+        assignmentService.assigner(exercice);
         return new ExerciceResponse(exercice.getId(), exercice.getStatut());
     }
 

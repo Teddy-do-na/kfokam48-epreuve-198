@@ -27,16 +27,18 @@ public class PresenceService {
     private final PresenceRepository presenceRepository;
     private final TentativeCodeRepository tentativeCodeRepository;
     private final TentativeCodeService tentativeCodeService;
+    private final RelecteurAssignmentService assignmentService;
     private final Clock clock;
 
     public PresenceService(CoursSessionRepository sessionRepository, EtudiantRepository etudiantRepository,
                            PresenceRepository presenceRepository, TentativeCodeRepository tentativeCodeRepository,
-                           TentativeCodeService tentativeCodeService, Clock clock) {
+                           TentativeCodeService tentativeCodeService, RelecteurAssignmentService assignmentService, Clock clock) {
         this.sessionRepository = sessionRepository;
         this.etudiantRepository = etudiantRepository;
         this.presenceRepository = presenceRepository;
         this.tentativeCodeRepository = tentativeCodeRepository;
         this.tentativeCodeService = tentativeCodeService;
+        this.assignmentService = assignmentService;
         this.clock = clock;
     }
 
@@ -58,6 +60,7 @@ public class PresenceService {
             throw new ApiException(HttpStatus.CONFLICT, "DEJA_PRESENT", "La présence de cet étudiant est déjà enregistrée.");
         }
         Presence saved = presenceRepository.save(new Presence(session, etudiant, "FORMATEUR"));
+        assignmentService.reassignerEnAttente(session);
         return new PresenceResponse(saved.getId(), sessionId, etudiantId, saved.getSource());
     }
 
@@ -82,6 +85,7 @@ public class PresenceService {
         }
         tentativeCodeService.reinitialiser(etudiantId, clock.instant());
         Presence saved = presenceRepository.save(new Presence(session, etudiant, "ETUDIANT"));
+        assignmentService.reassignerEnAttente(session);
         return new PresenceResponse(saved.getId(), session.getId(), etudiantId, saved.getSource());
     }
 
