@@ -7,8 +7,19 @@ vi.mock('../api/client.js', () => ({
   api: { marquerPresence: vi.fn(), deposerExercice: vi.fn() },
 }))
 
-describe('EtudiantPage attendance expiration', () => {
+describe('EtudiantPage attendance', () => {
   beforeEach(() => vi.clearAllMocks())
+
+  it('confirme la présence lorsqu’un code valide est accepté', async () => {
+    api.marquerPresence.mockResolvedValue({ id: 1, sessionId: 3, etudiantId: 9, source: 'ETUDIANT' })
+    render(<EtudiantPage />)
+    fireEvent.change(screen.getByLabelText('Identifiant étudiant'), { target: { value: '9' } })
+    fireEvent.change(screen.getByLabelText('Code de présence'), { target: { value: 'abc234' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Valider ma présence' }))
+
+    expect((await screen.findByRole('status')).textContent).toBe('Votre présence a bien été enregistrée.')
+    expect(api.marquerPresence).toHaveBeenCalledWith({ code: 'ABC234', etudiantId: 9 })
+  })
 
   it('affiche le message renvoyé lorsque le code a expiré', async () => {
     api.marquerPresence.mockRejectedValue({ code: 'CODE_EXPIRE', message: 'Le code de présence a expiré.' })
@@ -18,5 +29,15 @@ describe('EtudiantPage attendance expiration', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Valider ma présence' }))
 
     expect((await screen.findByRole('alert')).textContent).toBe('Le code de présence a expiré.')
+  })
+
+  it('affiche le message renvoyé pour un code inconnu', async () => {
+    api.marquerPresence.mockRejectedValue({ code: 'CODE_INCONNU', message: 'Le code de présence est inconnu.' })
+    render(<EtudiantPage />)
+    fireEvent.change(screen.getByLabelText('Identifiant étudiant'), { target: { value: '9' } })
+    fireEvent.change(screen.getByLabelText('Code de présence'), { target: { value: 'ZZZZZZ' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Valider ma présence' }))
+
+    expect((await screen.findByRole('alert')).textContent).toBe('Le code de présence est inconnu.')
   })
 })
