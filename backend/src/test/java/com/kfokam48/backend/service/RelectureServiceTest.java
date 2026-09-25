@@ -1,7 +1,9 @@
 package com.kfokam48.backend.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.kfokam48.backend.dto.SoumettreRelectureRequest;
@@ -16,12 +18,14 @@ import com.kfokam48.backend.repository.RelectureRepository;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 class RelectureServiceTest {
@@ -61,10 +65,27 @@ class RelectureServiceTest {
         assertEquals("RENDUE", fixture.relecture.getStatut());
     }
 
+    @Test
+    void listeLesRelecturesAssigneesSansExposerLauteur() {
+        var fixture = fixture();
+        when(etudiantRepository.existsById(4L)).thenReturn(true);
+        when(relectureRepository.findByRelecteurIdOrderByIdDesc(4L)).thenReturn(List.of(fixture.relecture));
+
+        var result = service.consulterAssignees(4L);
+
+        assertEquals(1, result.size());
+        assertEquals("https://example.org/work", result.get(0).lien());
+        assertEquals("EN_ATTENTE", result.get(0).statut());
+        assertFalse(result.get(0).toString().contains("Auteur"));
+        verify(relectureRepository).findByRelecteurIdOrderByIdDesc(4L);
+    }
+
     private Fixture fixture() {
         Promotion promotion = new Promotion("Promotion A");
         Etudiant author = new Etudiant("Auteur", promotion);
+        ReflectionTestUtils.setField(author, "id", 3L);
         Etudiant reviewer = new Etudiant("Relecteur", promotion);
+        ReflectionTestUtils.setField(reviewer, "id", 4L);
         CoursSession session = new CoursSession("Cours", promotion, "ABC234", Instant.now(), Instant.now().plusSeconds(600));
         Exercice exercise = new Exercice(session, author, "https://example.org/work", Instant.now());
         Relecture review = new Relecture(exercise, reviewer);

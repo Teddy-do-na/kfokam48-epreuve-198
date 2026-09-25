@@ -1,5 +1,6 @@
 package com.kfokam48.backend.service;
 
+import com.kfokam48.backend.dto.RelectureAssigneeResponse;
 import com.kfokam48.backend.dto.RelectureEtudiantResponse;
 import com.kfokam48.backend.dto.SoumettreRelectureRequest;
 import com.kfokam48.backend.entity.Etudiant;
@@ -8,10 +9,10 @@ import com.kfokam48.backend.exception.ApiException;
 import com.kfokam48.backend.repository.EtudiantRepository;
 import com.kfokam48.backend.repository.RelectureRepository;
 import java.time.Clock;
+import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.util.List;
 
 @Service
 public class RelectureService {
@@ -29,6 +30,18 @@ public class RelectureService {
     public List<RelectureEtudiantResponse> consulterParEtudiant(Long etudiantId) {
         return relectureRepository.findByExerciceEtudiantId(etudiantId).stream()
                 .map(relecture -> new RelectureEtudiantResponse(relecture.getId(),
+                        relecture.getNote() == null ? null : relecture.getNote().intValue(),
+                        relecture.getCommentaire(), relecture.getStatut()))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<RelectureAssigneeResponse> consulterAssignees(Long etudiantId) {
+        if (!etudiantRepository.existsById(etudiantId)) {
+            throw new ApiException(HttpStatus.NOT_FOUND, "ETUDIANT_INTROUVABLE", "L’étudiant demandé est introuvable.");
+        }
+        return relectureRepository.findByRelecteurIdOrderByIdDesc(etudiantId).stream()
+                .map(relecture -> new RelectureAssigneeResponse(relecture.getId(), relecture.getExercice().getLien(),
                         relecture.getNote() == null ? null : relecture.getNote().intValue(),
                         relecture.getCommentaire(), relecture.getStatut()))
                 .toList();

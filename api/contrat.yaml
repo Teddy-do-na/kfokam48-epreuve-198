@@ -84,6 +84,31 @@ paths:
         '400': { description: lien invalide }
         '409': { description: exercice déjà déposé }
 
+  /api/relectures/assignees:
+    get:
+      summary: Consulter les relectures assignées à un étudiant
+      parameters:
+        - name: etudiantId
+          in: query
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Relectures assignées sans identité de l'auteur
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id: { type: integer }
+                    lien: { type: string }
+                    note: { type: integer, nullable: true }
+                    commentaire: { type: string, nullable: true }
+                    statut: { type: string }
+        '404': { description: étudiant inconnu }
+
   /api/relectures/{id}:
     post:
       summary: Rendre une relecture (note et commentaire)

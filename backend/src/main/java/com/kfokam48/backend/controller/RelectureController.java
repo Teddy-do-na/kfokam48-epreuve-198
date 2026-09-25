@@ -1,5 +1,6 @@
 package com.kfokam48.backend.controller;
 
+import com.kfokam48.backend.dto.RelectureAssigneeResponse;
 import com.kfokam48.backend.dto.RelectureEtudiantResponse;
 import com.kfokam48.backend.dto.SoumettreRelectureRequest;
 import java.util.List;
@@ -26,6 +27,11 @@ public class RelectureController {
     @GetMapping
     public List<RelectureEtudiantResponse> consulter(@RequestParam Long etudiantId) {
         return relectureService.consulterParEtudiant(etudiantId);
+    }
+
+    @GetMapping("/assignees")
+    public List<RelectureAssigneeResponse> consulterAssignees(@RequestParam Long etudiantId) {
+        return relectureService.consulterAssignees(etudiantId);
     }
 
     @PostMapping("/{id}")

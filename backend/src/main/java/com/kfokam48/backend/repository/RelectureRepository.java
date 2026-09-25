@@ -8,4 +8,5 @@ public interface RelectureRepository extends JpaRepository<Relecture, Long> {
     boolean existsByExerciceIdAndStatut(Long exerciceId, String statut);
     boolean existsByExerciceId(Long exerciceId);
     List<Relecture> findByExerciceEtudiantId(Long etudiantId);
+    List<Relecture> findByRelecteurIdOrderByIdDesc(Long relecteurId);
 }
