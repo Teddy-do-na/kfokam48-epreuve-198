@@ -41,6 +41,7 @@ class ExerciceReplacementTest {
     @Test
     void refuseLeRemplacementApresUneRelectureRendue() {
         Promotion promotion = new Promotion("Promotion A");
+        org.springframework.test.util.ReflectionTestUtils.setField(promotion, "id", 1L);
         CoursSession session = new CoursSession("Cours", promotion, "ABC234",
                 Instant.parse("2026-01-01T10:00:00Z"), Instant.parse("2026-01-01T10:15:00Z"));
         Exercice exercice = new Exercice(session, new Etudiant("Étudiant", promotion), "https://example.org/old",

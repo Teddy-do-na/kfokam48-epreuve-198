@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 class PresenceServiceDuplicateTest {
@@ -41,12 +42,15 @@ class PresenceServiceDuplicateTest {
     @Test
     void renvoieConflitQuandLetudiantEstDejaPresent() {
         Promotion promotion = new Promotion("Promotion A");
+        ReflectionTestUtils.setField(promotion, "id", 5L);
         CoursSession session = new CoursSession("Cours Java", promotion, "ABC234",
                 Instant.parse("2026-01-01T10:00:00Z"), Instant.parse("2026-01-01T10:15:00Z"));
         Etudiant etudiant = new Etudiant("Étudiant A", promotion);
+        ReflectionTestUtils.setField(session, "id", 2L);
+        ReflectionTestUtils.setField(etudiant, "id", 1L);
         when(sessionRepository.findByCode("ABC234")).thenReturn(Optional.of(session));
         when(etudiantRepository.findById(1L)).thenReturn(Optional.of(etudiant));
-        when(presenceRepository.existsBySessionIdAndEtudiantId(null, 1L)).thenReturn(true);
+        when(presenceRepository.existsBySessionIdAndEtudiantId(2L, 1L)).thenReturn(true);
 
         ApiException exception = assertThrows(ApiException.class, () -> service.marquer("ABC234", 1L));
 

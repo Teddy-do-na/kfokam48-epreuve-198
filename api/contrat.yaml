@@ -30,6 +30,26 @@ paths:
         '400':
           description: champ manquant
 
+  /api/sessions/{id}/cloture:
+    post:
+      summary: Clôturer définitivement une session
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Session clôturée, dépôts et notes verrouillés
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: integer }
+                  clotureeAt: { type: string, format: date-time }
+        '404': { description: session inconnue }
+
   /api/presences:
     post:
       summary: Marquer sa présence avec un code

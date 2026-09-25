@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 class ExerciceServiceTest {
@@ -43,9 +44,11 @@ class ExerciceServiceTest {
     @Test
     void accepteUnDepotsApresExpirationSiLaSessionNestPasCloturee() {
         Promotion promotion = new Promotion("Promotion A");
+        ReflectionTestUtils.setField(promotion, "id", 1L);
         CoursSession session = new CoursSession("Cours", promotion, "ABC234",
                 Instant.parse("2026-01-01T10:00:00Z"), Instant.parse("2026-01-01T10:15:00Z"));
         Etudiant etudiant = new Etudiant("Étudiant", promotion);
+        ReflectionTestUtils.setField(etudiant, "id", 3L);
         when(sessionRepository.findById(2L)).thenReturn(Optional.of(session));
         when(etudiantRepository.findById(3L)).thenReturn(Optional.of(etudiant));
         when(exerciceRepository.existsBySessionIdAndEtudiantId(2L, 3L)).thenReturn(false);
@@ -58,8 +61,13 @@ class ExerciceServiceTest {
 
     @Test
     void refuseUnLienHttp() {
-        when(sessionRepository.findById(2L)).thenReturn(Optional.of(sessionNonCloturee()));
-        when(etudiantRepository.findById(3L)).thenReturn(Optional.of(new Etudiant("Étudiant", new Promotion("Promotion A"))));
+        Promotion promotion = new Promotion("Promotion A");
+        ReflectionTestUtils.setField(promotion, "id", 1L);
+        CoursSession session = sessionNonCloturee(promotion);
+        Etudiant etudiant = new Etudiant("Étudiant", promotion);
+        ReflectionTestUtils.setField(etudiant, "id", 3L);
+        when(sessionRepository.findById(2L)).thenReturn(Optional.of(session));
+        when(etudiantRepository.findById(3L)).thenReturn(Optional.of(etudiant));
 
         ApiException exception = assertThrows(ApiException.class,
                 () -> service.deposer(new DeposerExerciceRequest(2L, 3L, "http://example.org/work")));
@@ -70,8 +78,12 @@ class ExerciceServiceTest {
     @Test
     void refuseUnSecondDepot() {
         Promotion promotion = new Promotion("Promotion A");
-        when(sessionRepository.findById(2L)).thenReturn(Optional.of(sessionNonCloturee(promotion)));
-        when(etudiantRepository.findById(3L)).thenReturn(Optional.of(new Etudiant("Étudiant", promotion)));
+        ReflectionTestUtils.setField(promotion, "id", 1L);
+        CoursSession session = sessionNonCloturee(promotion);
+        Etudiant etudiant = new Etudiant("Étudiant", promotion);
+        ReflectionTestUtils.setField(etudiant, "id", 3L);
+        when(sessionRepository.findById(2L)).thenReturn(Optional.of(session));
+        when(etudiantRepository.findById(3L)).thenReturn(Optional.of(etudiant));
         when(exerciceRepository.existsBySessionIdAndEtudiantId(2L, 3L)).thenReturn(true);
 
         ApiException exception = assertThrows(ApiException.class,

@@ -43,16 +43,16 @@ class PresenceLockoutTest {
     void bloqueLetudiantApresCinqEchecsPendantDeuxMinutes() {
         Etudiant student = new Etudiant("Étudiant A", new Promotion("Promotion A"));
         List<TentativeCode> failures = java.util.stream.IntStream.range(0, 5)
-                .mapToObj(index -> new TentativeCode(student, Instant.parse("2026-01-01T10:00:00Z").plusSeconds(index)))
+                .mapToObj(index -> new TentativeCode(student, Instant.parse("2026-01-01T10:00:00Z").plusSeconds(4 - index)))
                 .toList();
         when(etudiantRepository.findById(1L)).thenReturn(Optional.of(student));
         when(tentativeCodeRepository.findByEtudiantIdAndCreatedAtAfterOrderByCreatedAtDesc(1L,
-                Instant.parse("2025-12-31T23:59:00Z"))).thenReturn(failures);
+                Instant.parse("2026-01-01T09:59:00Z"))).thenReturn(failures);
 
         ApiException exception = assertThrows(ApiException.class, () -> service.marquer("ABC234", 1L));
 
         assertEquals(429, exception.getStatus().value());
         assertEquals("ETUDIANT_BLOQUE", exception.getCode());
-        assertEquals(59L, exception.getRetryAfterSeconds());
+        assertEquals(64L, exception.getRetryAfterSeconds());
     }
 }

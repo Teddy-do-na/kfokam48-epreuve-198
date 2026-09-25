@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 class PresenceManuelleTest {
@@ -40,9 +41,12 @@ class PresenceManuelleTest {
     @Test
     void marqueLaPresenceManuelleAvecLaSourceFormateur() {
         Promotion promotion = new Promotion("Promotion A");
+        ReflectionTestUtils.setField(promotion, "id", 1L);
         CoursSession session = new CoursSession("Cours Java", promotion, "ABC234",
                 Instant.parse("2026-01-01T10:00:00Z"), Instant.parse("2026-01-01T10:15:00Z"));
         Etudiant etudiant = new Etudiant("Étudiant A", promotion);
+        ReflectionTestUtils.setField(session, "id", 2L);
+        ReflectionTestUtils.setField(etudiant, "id", 1L);
         when(sessionRepository.findById(2L)).thenReturn(Optional.of(session));
         when(etudiantRepository.findById(1L)).thenReturn(Optional.of(etudiant));
         when(presenceRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));

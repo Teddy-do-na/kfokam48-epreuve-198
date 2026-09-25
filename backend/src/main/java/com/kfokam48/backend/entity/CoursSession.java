@@ -92,6 +92,13 @@ public class CoursSession {
         return clotureeAt;
     }
 
+    public void cloturer(Instant instant) {
+        if (!cloturee) {
+            cloturee = true;
+            clotureeAt = instant;
+        }
+    }
+
     public List<Presence> getPresences() {
         return presences;
     }

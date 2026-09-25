@@ -32,6 +32,8 @@ class RelectureClosureTest {
         Promotion promotion = new Promotion("Promotion A");
         Etudiant author = new Etudiant("Auteur", promotion);
         Etudiant reviewer = new Etudiant("Relecteur", promotion);
+        org.springframework.test.util.ReflectionTestUtils.setField(author, "id", 1L);
+        org.springframework.test.util.ReflectionTestUtils.setField(reviewer, "id", 4L);
         CoursSession session = new CoursSession("Cours", promotion, "ABC234", Instant.now(), Instant.now().plusSeconds(900));
         try {
             var field = CoursSession.class.getDeclaredField("cloturee");
@@ -44,10 +46,10 @@ class RelectureClosureTest {
         RelectureService service = new RelectureService(relectureRepository, etudiantRepository,
                 Clock.fixed(Instant.now(), ZoneOffset.UTC));
         when(relectureRepository.findById(2L)).thenReturn(Optional.of(review));
-        when(etudiantRepository.findById(3L)).thenReturn(Optional.of(reviewer));
+        when(etudiantRepository.findById(4L)).thenReturn(Optional.of(reviewer));
 
         ApiException exception = assertThrows(ApiException.class,
-                () -> service.soumettre(2L, new SoumettreRelectureRequest(3L, 19, "Correction")));
+                () -> service.soumettre(2L, new SoumettreRelectureRequest(4L, 19, "Correction")));
 
         assertEquals(409, exception.getStatus().value());
         assertEquals("SESSION_CLOTUREE", exception.getCode());

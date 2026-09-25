@@ -1,6 +1,7 @@
 package com.kfokam48.backend.service;
 
 import com.kfokam48.backend.dto.OuvrirSessionRequest;
+import com.kfokam48.backend.dto.SessionClotureResponse;
 import com.kfokam48.backend.dto.SessionResponse;
 import com.kfokam48.backend.entity.CoursSession;
 import com.kfokam48.backend.entity.Promotion;
@@ -43,6 +44,15 @@ public class SessionService {
         CoursSession session = new CoursSession(request.titre().trim(), promotion, genererCode(), ouvertureAt, ouvertureAt.plus(CODE_VALIDITY));
         CoursSession saved = sessionRepository.save(session);
         return new SessionResponse(saved.getId(), saved.getCode(), saved.getOuvertureAt(), saved.getExpirationAt());
+    }
+
+    @Transactional
+    public SessionClotureResponse cloturer(Long sessionId) {
+        CoursSession session = sessionRepository.findById(sessionId)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "SESSION_INTROUVABLE", "La session demandée est introuvable."));
+        session.cloturer(clock.instant());
+        CoursSession saved = sessionRepository.save(session);
+        return new SessionClotureResponse(saved.getId(), saved.getClotureeAt());
     }
 
     private String genererCode() {
