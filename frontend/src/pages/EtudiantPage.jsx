@@ -13,6 +13,7 @@ export default function EtudiantPage() {
   const [code, setCode] = useState('')
   const [sessionId, setSessionId] = useState('')
   const [lien, setLien] = useState('')
+  const [exerciceId, setExerciceId] = useState('')
   const [message, setMessage] = useState('')
   const [erreur, setErreur] = useState('')
   const [chargement, setChargement] = useState(false)
@@ -47,8 +48,18 @@ export default function EtudiantPage() {
   function deposerExercice(event) {
     event.preventDefault()
     executer(async () => {
-      await api.deposerExercice({ sessionId: Number(sessionId), etudiantId: Number(etudiantId), lien: lien.trim() })
+      const resultat = await api.deposerExercice({ sessionId: Number(sessionId), etudiantId: Number(etudiantId), lien: lien.trim() })
+      setExerciceId(String(resultat.id))
       setMessage(messages.exerciseSuccess)
+      setLien('')
+    })
+  }
+
+  async function remplacerExercice(event) {
+    event.preventDefault()
+    executer(async () => {
+      await api.remplacerExercice(exerciceId, { etudiantId: Number(etudiantId), lien: lien.trim() })
+      setMessage('Votre lien a été mis à jour tant que la relecture n’a pas été rendue.')
       setLien('')
     })
   }
@@ -71,7 +82,7 @@ export default function EtudiantPage() {
           </label>
           <button className="button-primary w-full" disabled={chargement}>Valider ma présence</button>
         </form>
-        <form className="panel space-y-5 p-6 sm:p-8" onSubmit={deposerExercice}>
+        <form className="panel space-y-5 p-6 sm:p-8" onSubmit={exerciceId ? remplacerExercice : deposerExercice}>
           <div><span className="step-badge">02</span><h2 className="mt-5 text-xl font-semibold text-slate-950">Déposer mon exercice</h2><p className="mt-2 text-sm leading-6 text-slate-600">Le dépôt reste possible jusqu’à la clôture de la session.</p></div>
           <label className="field-label" htmlFor="sessionId">Identifiant de session
             <input className="field-input" id="sessionId" type="number" min="1" value={sessionId} onChange={event => setSessionId(event.target.value)} placeholder="Identifiant communiqué" required />
@@ -79,7 +90,7 @@ export default function EtudiantPage() {
           <label className="field-label" htmlFor="lien">Lien de l’exercice
             <input className="field-input" id="lien" type="url" value={lien} onChange={event => setLien(event.target.value)} placeholder="https://…" required maxLength={2048} />
           </label>
-          <button className="button-secondary w-full" disabled={chargement}>Envoyer mon exercice</button>
+          <button className="button-secondary w-full" disabled={chargement}>{exerciceId ? 'Remplacer mon lien' : 'Envoyer mon exercice'}</button>
         </form>
       </div>
       {erreur && <p role="alert" className="mt-6 rounded-xl bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">{erreur}</p>}
