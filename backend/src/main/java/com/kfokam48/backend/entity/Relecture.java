@@ -9,6 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.time.Instant;
 
 @Entity
 @Table(name = "relecture")
@@ -34,6 +35,12 @@ public class Relecture {
     @Column(nullable = false, length = 20)
     private String statut;
 
+    @Column(name = "created_at")
+    private Instant createdAt;
+
+    @Column(name = "updated_at")
+    private Instant updatedAt;
+
     protected Relecture() {
     }
 
@@ -41,6 +48,16 @@ public class Relecture {
         this.exercice = exercice;
         this.relecteur = relecteur;
         this.statut = "EN_ATTENTE";
+    }
+
+    public void soumettre(short note, String commentaire, Instant now) {
+        this.note = note;
+        this.commentaire = commentaire;
+        this.statut = "RENDUE";
+        if (this.createdAt == null) {
+            this.createdAt = now;
+        }
+        this.updatedAt = now;
     }
 
     public Long getId() {
