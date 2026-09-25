@@ -157,3 +157,40 @@ Copie chaque bloc "Titre" comme titre d'issue, et le contenu "Description" + "Cr
 **Critères d'acceptation** :
 - Une migration Flyway (`V2__donnees_demo.sql`) crée une promotion, des étudiants, une session ouverte
 **Référence** : Contraintes techniques, section 8
+
+---
+
+### 18. [Must] Ne pas perdre une présence quand l'assignation d'un relecteur échoue
+**Description** : Rapport client (enveloppe étape 3) : « J'ai ouvert une session ce matin avec deux étudiants côte à côte. Ils ont tapé le code presque en même temps et il n'y en a qu'un seul qui apparaît dans ma liste. J'ai réessayé une fois, cette fois les deux sont passés. »
+**Traduction technique** : `PresenceService.marquer` appelle `RelecteurAssignmentService.reassignerEnAttente` dans la **même transaction**. L'insertion de la `Relecture` échoue (`created_at` viole la contrainte NOT NULL, code SQL `23502` : `Relecture(exercice, relecteur)` n'initialise ni `created_at` ni `updated_at`), toute la transaction de présence est alors annulée : l'étudiant disparaît du tableau et l'API répond 500 `ERREUR_INTERNE`.
+**Reproduction (déterministe)** :
+1. Ouvrir une session (`POST /api/sessions`) puis marquer la présence de l'étudiant 1 (`POST /api/presences` → 201)
+2. Seul présent, l'étudiant 1 dépose son exercice (`POST /api/exercices` → 201, aucun relecteur éligible : la relecture reste « en attente d'assignation »)
+3. Marquer la présence de l'étudiant 2 avec le même code → **500 `ERREUR_INTERNE`** au lieu d'un 201
+4. `GET /api/tableau?promotionId=` : aucune présence ajoutée pour l'étudiant 2 ; chaque nouvelle tentative renvoie encore 500
+**Variante concurrente** : deux étudiants valident le même code en même temps alors qu'un exercice est en attente → même symptôme. Une fois les horodatages corrigés, la course sur `UNIQUE (exercice_id)` (aucun verrou avant l'insertion) continue de faire perdre une présence sur deux.
+**Critères d'acceptation** :
+- Le scénario ci-dessus répond 201 et la présence apparaît dans le tableau du formateur, sans réessai
+- Deux soumissions simultanées du même code pour deux étudiants différents enregistrent les deux présences
+- Un test d'intégration échoue avant le correctif et passe après
+- V1 et V2 ne sont pas modifiées (aucune migration réécrite en place)
+**Référence** : EF2, EF10, RG4, RG5 — rapport client enveloppe étape 3
+
+---
+
+### 19. [Should] Renvoyer 400/410 sur un code inconnu ou expiré au lieu de 500
+**Description** : Défaut annexe repéré pendant la reproduction de l'issue 18 : `TentativeCode(etudiant, instant)` ne renseigne jamais `session`, or `tentative_code.session_id` est NOT NULL en base. Chaque échec de code plante donc (`23502`) : `POST /api/presences` avec un code inconnu renvoie 500 au lieu de 400 `CODE_INCONNU`, et le compteur de blocage après 5 échecs (EF5/RG3) ne se remplit jamais.
+**Critères d'acceptation** :
+- Code inconnu → 400 `CODE_INCONNU` · code expiré → 410 `CODE_EXPIRE`
+- La 6e tentative dans la fenêtre de 2 minutes est refusée même avec un code correct
+- Test de non-régression qui échoue avant le correctif
+**Référence** : EF3, EF5, RG1, RG3
+
+---
+
+### 20. [Should] Répondre 409 sur une présence en double soumise en même temps
+**Description** : Défaut annexe repéré pendant la reproduction de l'issue 18 : `existsBySessionIdAndEtudiantId` puis `save` forme un check-then-act non atomique. Deux soumissions simultanées pour le **même** étudiant passent toutes les deux le contrôle, la seconde viole `UNIQUE (session_id, etudiant_id)` → 500 `ERREUR_INTERNE` au lieu de 409 `DEJA_PRESENT`.
+**Critères d'acceptation** :
+- Deux soumissions simultanées du même étudiant : exactement une 201 et une 409 `DEJA_PRESENT`
+- Aucun 500 sur ce scénario
+**Référence** : EF4, RG2
