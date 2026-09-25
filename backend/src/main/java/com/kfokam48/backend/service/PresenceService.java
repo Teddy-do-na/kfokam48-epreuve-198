@@ -26,14 +26,17 @@ public class PresenceService {
     private final EtudiantRepository etudiantRepository;
     private final PresenceRepository presenceRepository;
     private final TentativeCodeRepository tentativeCodeRepository;
+    private final TentativeCodeService tentativeCodeService;
     private final Clock clock;
 
     public PresenceService(CoursSessionRepository sessionRepository, EtudiantRepository etudiantRepository,
-                           PresenceRepository presenceRepository, TentativeCodeRepository tentativeCodeRepository, Clock clock) {
+                           PresenceRepository presenceRepository, TentativeCodeRepository tentativeCodeRepository,
+                           TentativeCodeService tentativeCodeService, Clock clock) {
         this.sessionRepository = sessionRepository;
         this.etudiantRepository = etudiantRepository;
         this.presenceRepository = presenceRepository;
         this.tentativeCodeRepository = tentativeCodeRepository;
+        this.tentativeCodeService = tentativeCodeService;
         this.clock = clock;
     }
 
@@ -49,19 +52,19 @@ public class PresenceService {
         verifierBlocage(etudiantId);
         CoursSession session = sessionRepository.findByCode(code.trim().toUpperCase()).orElse(null);
         if (session == null || !clock.instant().isBefore(session.getExpirationAt())) {
-            tentativeCodeRepository.save(new TentativeCode(etudiant, clock.instant()));
+            tentativeCodeService.enregistrerEchec(etudiant, clock.instant());
             throw new ApiException(session == null ? HttpStatus.BAD_REQUEST : HttpStatus.GONE,
                     session == null ? "CODE_INCONNU" : "CODE_EXPIRE",
                     session == null ? "Le code de présence est inconnu." : "Le code de présence a expiré.");
         }
         if (!session.getPromotion().getId().equals(etudiant.getPromotion().getId())) {
-            tentativeCodeRepository.save(new TentativeCode(etudiant, clock.instant()));
+            tentativeCodeService.enregistrerEchec(etudiant, clock.instant());
             throw new ApiException(HttpStatus.FORBIDDEN, "PROMOTION_INCORRECTE", "Cet étudiant ne fait pas partie de la promotion de la session.");
         }
         if (presenceRepository.existsBySessionIdAndEtudiantId(session.getId(), etudiantId)) {
             throw new ApiException(HttpStatus.CONFLICT, "DEJA_PRESENT", "La présence de cet étudiant est déjà enregistrée.");
         }
-        tentativeCodeRepository.supprimerAvant(etudiantId, clock.instant());
+        tentativeCodeService.reinitialiser(etudiantId, clock.instant());
         Presence saved = presenceRepository.save(new Presence(session, etudiant, "ETUDIANT"));
         return new PresenceResponse(saved.getId(), session.getId(), etudiantId, saved.getSource());
     }
