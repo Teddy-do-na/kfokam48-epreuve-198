@@ -14,6 +14,7 @@ import com.kfokam48.backend.exception.ApiException;
 import com.kfokam48.backend.repository.CoursSessionRepository;
 import com.kfokam48.backend.repository.EtudiantRepository;
 import com.kfokam48.backend.repository.ExerciceRepository;
+import com.kfokam48.backend.repository.RelectureRepository;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -29,11 +30,12 @@ class ExerciceServiceTest {
     @Mock private CoursSessionRepository sessionRepository;
     @Mock private EtudiantRepository etudiantRepository;
     @Mock private ExerciceRepository exerciceRepository;
+    @Mock private RelectureRepository relectureRepository;
     private ExerciceService service;
 
     @BeforeEach
     void setUp() {
-        service = new ExerciceService(sessionRepository, etudiantRepository, exerciceRepository,
+        service = new ExerciceService(sessionRepository, etudiantRepository, exerciceRepository, relectureRepository,
                 Clock.fixed(Instant.parse("2026-01-01T10:30:00Z"), ZoneOffset.UTC));
     }
 

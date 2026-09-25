@@ -9,6 +9,7 @@ import com.kfokam48.backend.exception.ApiException;
 import com.kfokam48.backend.repository.CoursSessionRepository;
 import com.kfokam48.backend.repository.EtudiantRepository;
 import com.kfokam48.backend.repository.ExerciceRepository;
+import com.kfokam48.backend.repository.RelectureRepository;
 import java.net.URI;
 import java.time.Clock;
 import java.time.Instant;
@@ -21,13 +22,15 @@ public class ExerciceService {
     private final CoursSessionRepository sessionRepository;
     private final EtudiantRepository etudiantRepository;
     private final ExerciceRepository exerciceRepository;
+    private final RelectureRepository relectureRepository;
     private final Clock clock;
 
     public ExerciceService(CoursSessionRepository sessionRepository, EtudiantRepository etudiantRepository,
-                           ExerciceRepository exerciceRepository, Clock clock) {
+                           ExerciceRepository exerciceRepository, RelectureRepository relectureRepository, Clock clock) {
         this.sessionRepository = sessionRepository;
         this.etudiantRepository = etudiantRepository;
         this.exerciceRepository = exerciceRepository;
+        this.relectureRepository = relectureRepository;
         this.clock = clock;
     }
 
@@ -49,6 +52,21 @@ public class ExerciceService {
         }
         Instant now = clock.instant();
         Exercice exercice = exerciceRepository.save(new Exercice(session, etudiant, request.lien().trim(), now));
+        return new ExerciceResponse(exercice.getId(), exercice.getStatut());
+    }
+
+    @Transactional
+    public ExerciceResponse remplacer(Long exerciceId, Long etudiantId, String lien) {
+        Exercice exercice = exerciceRepository.findByIdAndEtudiantId(exerciceId, etudiantId)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "EXERCICE_INTROUVABLE", "L’exercice demandé est introuvable."));
+        if (exercice.getSession().isCloturee()) {
+            throw new ApiException(HttpStatus.CONFLICT, "SESSION_CLOTUREE", "La session est clôturée et ne permet plus de modification.");
+        }
+        validerLien(lien);
+        if (relectureRepository.existsByExerciceIdAndStatut(exerciceId, "RENDUE")) {
+            throw new ApiException(HttpStatus.CONFLICT, "RELECTURE_DEJA_RENDUE", "Le lien ne peut plus être remplacé après une relecture rendue.");
+        }
+        exercice.remplacerLien(lien.trim(), clock.instant());
         return new ExerciceResponse(exercice.getId(), exercice.getStatut());
     }
 
