@@ -4,7 +4,7 @@ import FormateurPage from './FormateurPage.jsx'
 import { api } from '../api/client.js'
 
 vi.mock('../api/client.js', () => ({
-  api: { ouvrirSession: vi.fn() },
+  api: { ouvrirSession: vi.fn(), getTableau: vi.fn(), cloturerSession: vi.fn() },
 }))
 
 describe('FormateurPage', () => {
@@ -14,18 +14,28 @@ describe('FormateurPage', () => {
     api.ouvrirSession.mockResolvedValue({ id: 4, code: 'AB23CD', ouvertureAt: '2026-01-01T10:00:00Z', expirationAt: '2026-01-01T10:15:00Z' })
     render(<FormateurPage />)
     fireEvent.change(screen.getByLabelText('Intitulé du cours'), { target: { value: 'Développement web' } })
-    fireEvent.change(screen.getByLabelText('Identifiant de promotion'), { target: { value: '2' } })
+    fireEvent.change(screen.getByLabelText('Identifiant de promotion', { selector: '#promotionId' }), { target: { value: '2' } })
     fireEvent.click(screen.getByRole('button', { name: 'Ouvrir la session' }))
 
     expect((await screen.findByText('AB23CD')).textContent).toBe('AB23CD')
     expect(api.ouvrirSession).toHaveBeenCalledWith({ titre: 'Développement web', promotionId: 2 })
   })
 
+  it('charge et affiche le tableau de suivi', async () => {
+    api.getTableau.mockResolvedValue([{ etudiantId: 9, nom: 'Ada', presences: 2, exercicesDeposes: 1, moyenne: 18, relecturesEnAttente: 0 }])
+    render(<FormateurPage />)
+    fireEvent.change(screen.getByLabelText('Promotion à consulter'), { target: { value: '2' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Afficher le tableau' }))
+
+    expect(await screen.findByText('Ada')).toBeTruthy()
+    expect(api.getTableau).toHaveBeenCalledWith(2)
+  })
+
   it('affiche le message d’erreur de l’API', async () => {
     api.ouvrirSession.mockRejectedValue({ message: 'Promotion introuvable.' })
     render(<FormateurPage />)
     fireEvent.change(screen.getByLabelText('Intitulé du cours'), { target: { value: 'Développement web' } })
-    fireEvent.change(screen.getByLabelText('Identifiant de promotion'), { target: { value: '2' } })
+    fireEvent.change(screen.getByLabelText('Identifiant de promotion', { selector: '#promotionId' }), { target: { value: '2' } })
     fireEvent.click(screen.getByRole('button', { name: 'Ouvrir la session' }))
 
     await waitFor(() => expect(screen.getByRole('alert').textContent).toContain('Promotion introuvable.'))

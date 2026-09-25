@@ -11,6 +11,9 @@ export default function FormateurPage() {
   const [promotionId, setPromotionId] = useState('')
   const [session, setSession] = useState(null)
   const [etudiantId, setEtudiantId] = useState('')
+  const [tableauPromotionId, setTableauPromotionId] = useState('')
+  const [tableau, setTableau] = useState([])
+  const [tableauCharge, setTableauCharge] = useState(false)
   const [feedbackPresence, setFeedbackPresence] = useState('')
   const [erreur, setErreur] = useState('')
   const [chargement, setChargement] = useState(false)
@@ -46,8 +49,29 @@ export default function FormateurPage() {
     }
   }
 
+  async function chargerTableau(event) {
+    event.preventDefault()
+    setErreur('')
+    setTableauCharge(false)
+    if (!tableauPromotionId || Number(tableauPromotionId) < 1) {
+      setErreur('Renseignez un identifiant de promotion valide.')
+      return
+    }
+    setChargement(true)
+    try {
+      setTableau(await api.getTableau(Number(tableauPromotionId)))
+      setTableauCharge(true)
+    } catch (error) {
+      setErreur(error.message || 'Impossible de charger le tableau de suivi.')
+      setTableau([])
+    } finally {
+      setChargement(false)
+    }
+  }
+
   return (
-    <main className="mx-auto grid w-full max-w-6xl gap-10 px-5 py-10 lg:grid-cols-[1fr_0.8fr] lg:px-8 lg:py-16">
+    <main className="mx-auto w-full max-w-6xl space-y-10 px-5 py-10 lg:px-8 lg:py-16">
+      <div className="grid gap-10 lg:grid-cols-[1fr_0.8fr]">
       <section className="animate-fade-up">
         <span className="eyebrow">Espace formateur</span>
         <h1 className="mt-4 max-w-xl text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">Une session prête en quelques instants.</h1>
@@ -81,6 +105,27 @@ export default function FormateurPage() {
           {feedbackPresence && <p role="status" className="rounded-xl bg-teal-400/10 px-4 py-3 text-sm text-teal-100">{feedbackPresence}</p>}
         </div>}
       </aside>
+      </div>
+      <section className="panel space-y-5 p-6 sm:p-8">
+        <div>
+          <span className="eyebrow">Suivi pédagogique</span>
+          <h2 className="mt-3 text-2xl font-semibold text-slate-950">Tableau de suivi de la promotion</h2>
+          <p className="mt-2 text-sm text-slate-600">Présences, dépôts, moyennes et relectures restant à rendre.</p>
+        </div>
+        <form className="flex flex-col gap-3 sm:flex-row" onSubmit={chargerTableau}>
+          <label className="field-label min-w-0 flex-1" htmlFor="tableauPromotionId">Promotion à consulter
+            <input className="field-input" id="tableauPromotionId" type="number" min="1" required value={tableauPromotionId} onChange={event => setTableauPromotionId(event.target.value)} placeholder="1" />
+          </label>
+          <button className="button-primary self-end" type="submit" disabled={chargement}>{chargement ? 'Chargement…' : 'Afficher le tableau'}</button>
+        </form>
+        {tableauCharge && <div className="overflow-x-auto rounded-xl border border-slate-200">
+          <table className="w-full min-w-[680px] text-left text-sm">
+            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500"><tr><th className="px-4 py-3">Étudiant</th><th className="px-4 py-3">Présences</th><th className="px-4 py-3">Exercices</th><th className="px-4 py-3">Moyenne</th><th className="px-4 py-3">Relectures en attente</th></tr></thead>
+            <tbody className="divide-y divide-slate-100 bg-white">{tableau.map(etudiant => <tr key={etudiant.etudiantId}><th scope="row" className="px-4 py-3 font-semibold text-slate-900">{etudiant.nom}</th><td className="px-4 py-3">{etudiant.presences}</td><td className="px-4 py-3">{etudiant.exercicesDeposes}</td><td className="px-4 py-3">{etudiant.moyenne == null ? '—' : `${Number(etudiant.moyenne).toFixed(1)} / 20`}</td><td className="px-4 py-3">{etudiant.relecturesEnAttente}</td></tr>)}</tbody>
+          </table>
+          {tableau.length === 0 && <p className="px-4 py-5 text-sm text-slate-600">Aucun étudiant dans cette promotion.</p>}
+        </div>}
+      </section>
     </main>
   )
 }
