@@ -10,6 +10,7 @@ import com.kfokam48.backend.exception.ApiException;
 import com.kfokam48.backend.repository.CoursSessionRepository;
 import com.kfokam48.backend.repository.EtudiantRepository;
 import com.kfokam48.backend.repository.PresenceRepository;
+import com.kfokam48.backend.repository.TentativeCodeRepository;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -28,11 +29,13 @@ class PresenceServiceTest {
     private EtudiantRepository etudiantRepository;
     @Mock
     private PresenceRepository presenceRepository;
+    @Mock
+    private TentativeCodeRepository tentativeCodeRepository;
     private PresenceService service;
 
     @BeforeEach
     void setUp() {
-        service = new PresenceService(sessionRepository, etudiantRepository, presenceRepository,
+        service = new PresenceService(sessionRepository, etudiantRepository, presenceRepository, tentativeCodeRepository,
                 Clock.fixed(Instant.parse("2026-01-01T10:15:00Z"), ZoneOffset.UTC));
     }
 
