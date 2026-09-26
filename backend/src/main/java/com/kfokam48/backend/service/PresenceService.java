@@ -49,7 +49,8 @@ public class PresenceService {
 
     @Transactional
     public PresenceResponse ajouterManuellement(Long sessionId, Long etudiantId) {
-        CoursSession session = sessionRepository.findById(sessionId)
+        // Verrou de session : l'insertion de présence et l'assignation éventuelle sont sérialisées
+        CoursSession session = sessionRepository.findByIdForUpdate(sessionId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "SESSION_INTROUVABLE", "La session demandée est introuvable."));
         Etudiant etudiant = etudiantRepository.findById(etudiantId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "ETUDIANT_INTROUVABLE", "L’étudiant demandé est introuvable."));
@@ -69,7 +70,7 @@ public class PresenceService {
         Etudiant etudiant = etudiantRepository.findById(etudiantId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "ETUDIANT_INTROUVABLE", "L’étudiant demandé est introuvable."));
         verifierBlocage(etudiantId);
-        CoursSession session = sessionRepository.findByCode(code.trim().toUpperCase()).orElse(null);
+        CoursSession session = sessionRepository.findByCodeForUpdate(code.trim().toUpperCase()).orElse(null);
         if (session == null || !clock.instant().isBefore(session.getExpirationAt())) {
             tentativeCodeService.enregistrerEchec(etudiant, clock.instant());
             throw new ApiException(session == null ? HttpStatus.BAD_REQUEST : HttpStatus.GONE,

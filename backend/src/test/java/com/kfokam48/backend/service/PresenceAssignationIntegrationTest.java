@@ -212,11 +212,13 @@ class PresenceAssignationIntegrationTest {
     void codeExpireRenvoie410() {
         Instant maintenant = Instant.now();
         Promotion promotion = promotionRepository.findById(1L).orElseThrow();
-        sessionRepository.save(new CoursSession("Session expiree", promotion, "EXPIREE1",
+        // Code unique : les essais successifs du même test ne doivent pas heurter UNIQUE (code)
+        String code = "EXP" + (System.nanoTime() % 1_000_000_000L);
+        sessionRepository.save(new CoursSession("Session expiree", promotion, code,
                 maintenant.minusSeconds(1200), maintenant.minusSeconds(300)));
 
         ApiException expire = assertThrows(ApiException.class,
-                () -> presenceService.marquer("EXPIREE1", 3L),
+                () -> presenceService.marquer(code, 3L),
                 "Un code expire doit renvoyer 410 CODE_EXPIRE, pas une erreur interne");
         assertEquals(410, expire.getStatus().value());
         assertEquals("CODE_EXPIRE", expire.getCode());

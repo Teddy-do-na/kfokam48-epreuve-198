@@ -48,7 +48,7 @@ class PresenceServiceDuplicateTest {
         Etudiant etudiant = new Etudiant("Étudiant A", promotion);
         ReflectionTestUtils.setField(session, "id", 2L);
         ReflectionTestUtils.setField(etudiant, "id", 1L);
-        when(sessionRepository.findByCode("ABC234")).thenReturn(Optional.of(session));
+        when(sessionRepository.findByCodeForUpdate("ABC234")).thenReturn(Optional.of(session));
         when(etudiantRepository.findById(1L)).thenReturn(Optional.of(etudiant));
         when(presenceRepository.existsBySessionIdAndEtudiantId(2L, 1L)).thenReturn(true);
 

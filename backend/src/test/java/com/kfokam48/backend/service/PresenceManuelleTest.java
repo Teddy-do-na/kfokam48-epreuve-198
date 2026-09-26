@@ -47,7 +47,7 @@ class PresenceManuelleTest {
         Etudiant etudiant = new Etudiant("Étudiant A", promotion);
         ReflectionTestUtils.setField(session, "id", 2L);
         ReflectionTestUtils.setField(etudiant, "id", 1L);
-        when(sessionRepository.findById(2L)).thenReturn(Optional.of(session));
+        when(sessionRepository.findByIdForUpdate(2L)).thenReturn(Optional.of(session));
         when(etudiantRepository.findById(1L)).thenReturn(Optional.of(etudiant));
         when(presenceRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 

@@ -8,6 +8,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import java.time.Instant;
 
@@ -48,6 +49,22 @@ public class Relecture {
         this.exercice = exercice;
         this.relecteur = relecteur;
         this.statut = "EN_ATTENTE";
+    }
+
+    /**
+     * ISSUE 18 : {@code relecture.created_at / updated_at} sont NOT NULL depuis V1. Sans cet
+     * horodatage, la première assignation lève un 23502 qui annule la transaction de présence
+     * en cours et fait disparaître l'étudiant du tableau du formateur.
+     */
+    @PrePersist
+    void horodaterAvantEnregistrement() {
+        Instant maintenant = Instant.now();
+        if (this.createdAt == null) {
+            this.createdAt = maintenant;
+        }
+        if (this.updatedAt == null) {
+            this.updatedAt = maintenant;
+        }
     }
 
     public void soumettre(short note, String commentaire, Instant now) {

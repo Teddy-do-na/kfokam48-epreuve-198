@@ -39,7 +39,9 @@ public class ExerciceService {
 
     @Transactional
     public ExerciceResponse deposer(DeposerExerciceRequest request) {
-        CoursSession session = sessionRepository.findById(request.sessionId())
+        // Verrou de session : le dépôt et l'assignation du relecteur ne peuvent pas rivaliser
+        // avec une présence concurrente sur le même exercice (ISSUE 18, UNIQUE exercice_id)
+        CoursSession session = sessionRepository.findByIdForUpdate(request.sessionId())
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "SESSION_INTROUVABLE", "La session demandée est introuvable."));
         Etudiant etudiant = etudiantRepository.findById(request.etudiantId())
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "ETUDIANT_INTROUVABLE", "L’étudiant demandé est introuvable."));
