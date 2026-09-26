@@ -38,9 +38,9 @@ Le relecteur n'est pas un rôle permanent : c'est un étudiant, assigné automat
 | Réf | Exigence | Critère d'acceptation | Priorité |
 |---|---|---|---|
 | EF1 | Le formateur ouvre une session et obtient un code | `POST /api/sessions` renvoie 201 avec un code unique, une date d'ouverture et une expiration à +15 min | Must |
-| EF2 | L'étudiant marque sa présence avec un code valide | Un code valide et non expiré, saisi par un étudiant pas encore présent, renvoie 201 et la présence apparaît dans le tableau | Must |
-| EF3 | Un code expiré est refusé | Un code saisi après `expirationAt` renvoie 410 `CODE_EXPIRE` | Must |
-| EF4 | Un étudiant ne peut pas se marquer présent deux fois | Une deuxième tentative valide sur la même session renvoie 409 `DEJA_PRESENT` | Must |
+| EF2 | L'étudiant marque sa présence avec un code valide | Un code valide et non expiré, saisi par un étudiant pas encore présent, renvoie 201 et la présence apparaît dans le tableau — même si un exercice est en attente d'assignation et même si un pair saisit le code au même instant, et sans réessai | Must |
+| EF3 | Un code expiré ou inconnu est refusé | Un code saisi après `expirationAt` renvoie 410 `CODE_EXPIRE` ; un code inconnu renvoie 400 `CODE_INCONNU`. Jamais de 500 pour l'une ou l'autre situation | Must |
+| EF4 | Un étudiant ne peut pas se marquer présent deux fois | Une deuxième tentative valide sur la même session renvoie 409 `DEJA_PRESENT` ; en cas de soumission simultanée, exactement un 201 et un 409, jamais de 500 | Must |
 | EF5 | Après 5 échecs consécutifs, l'étudiant est bloqué 2 minutes | La 6e tentative dans la fenêtre est refusée, même avec un code correct, jusqu'à écoulement du délai | Should |
 | EF6 | Le formateur ajoute une présence manuellement | La présence créée porte `source=FORMATEUR` et s'affiche distinctement | Must |
 | EF7 | L'étudiant dépose le lien de son exercice | `POST /api/exercices` renvoie 201, statut `EN_ATTENTE_RELECTURE` | Must |
@@ -70,7 +70,7 @@ EF17 | Le formateur clôture une session | Une fois clôturée, aucun dépôt ni
 |---|---|---|
 | RG1 | Le code de présence expire 15 minutes après l'ouverture de la session | Q2 |
 | RG2 | Impossible de marquer sa présence une fois le code expiré | Q2, Q3 |
-| RG3 | 5 échecs de code consécutifs → blocage de 2 minutes | Q4 |
+| RG3 | 5 échecs de code consécutifs → blocage de 2 minutes ; tout échec compte, y compris pour un code inconnu qui ne rattache à aucune session | Q4 |
 | RG4 | Un étudiant ne peut jamais relire son propre exercice | Q5 |
 | RG5 | Un exercice a exactement un relecteur, choisi au hasard parmi les présents à la session | Q6, Q7 |
 | RG6 | L'étudiant relu voit note et commentaire, jamais l'identité du relecteur | Q8 |
@@ -81,6 +81,7 @@ EF17 | Le formateur clôture une session | Une fois clôturée, aucun dépôt ni
 | RG11 | Le lien d'un exercice peut être remplacé tant qu'aucune relecture n'a été rendue | Q13 |
 | RG12 | Une présence ajoutée manuellement par le formateur est marquée `source=FORMATEUR` | Q14 |
 | RG13 | Une fois la session clôturée par le formateur, aucune note ne peut plus être modifiée | Arbitrage Q10 / Q15, voir section 7 |
+| RG14 | Une présence n'est jamais perdue à cause de l'assignation d'un relecteur : la relecture créée porte systématiquement ses horodatages et les écritures d'une même session sont sérialisées par un verrou pessimiste (dépôt de la session) | Rapport client enveloppe étape 3, EF2 / EF4 / EF5 |
 
 ## 7. Zones d'ombre, hypothèses et contradictions tranchées
 
@@ -90,6 +91,7 @@ EF17 | Le formateur clôture une session | Une fois clôturée, aucun dépôt ni
 | Trou : qui clôture une session, et quand ? | Aucune question ne le demande, alors que Q10, Q12, Q13 et Q15 reposent tous sur la notion de "session clôturée" | Seul le formateur peut clôturer une session, par une action explicite distincte de l'expiration du code. Tant qu'elle n'est pas clôturée : dépôts et corrections de note restent possibles | Le code expire (RG1) mais la session continue de vivre pour les dépôts (Q12) : il faut un second événement, contrôlé par le formateur, qui ferme définitivement le dossier. Sans lui, RG8/RG10/RG11 n'ont pas de borne temporelle claire |
 | Session avec un seul étudiant présent : impossible d'assigner un relecteur distinct | Non traité par le client | L'exercice reste en statut "en attente d'assignation" (compté comme en attente dans le tableau) tant qu'aucun autre étudiant éligible n'est présent ; réévaluation à chaque nouvelle présence sur la même session | Évite un blocage ou une violation de RG4 (relecture de soi-même) |
 | Un même étudiant peut-il relire plusieurs exercices sur une session ? | Non traité | Oui, aucune limite posée par défaut | Aucune contrainte contraire dans les 16 réponses ; à corriger si le client le précise |
+| Rapport client (enveloppe étape 3) : « deux étudiants ont tapé le code presque en même temps et il n'y en a qu'un seul qui apparaît » — conséquence 2 : « un seul relecteur, ça ne marche pas » | Bug reproduit avant tout correctif : l'assignation échouait en base (`relecture` sans horodatages → 23502) et annulait la transaction de présence ; deux défauts annexes dérivés : 500 au lieu de 400/410 sur un code inconnu, 500 au lieu de 409 sur une double présence simultanée | Bug et évolution séparés. **Bug (issues 18, 19, 20)** : présence et assignation restent dans la même transaction, mais l'assignation est rendue infaillible (horodatages systématiques, verrou de session pour sérialiser les écritures concurrentes) ; migration V3 rend `tentative_code.session_id` optionnel pour que chaque échec compte. **Évolution (changement de besoin)** : deux paires de relecteurs et note = moyenne des deux, réservée à une branche et une PR distinctes | Postgres annule intégralement une transaction dès la première erreur SQL : déplacer l'assignation dans une autre transaction l'empêcherait de voir la présence en cours de validation ; rendre l'écriture infaillible conserve l'atomicité demandée par EF2 sans violer RG4/RG5 |
 
 ## 8. Contraintes techniques
 

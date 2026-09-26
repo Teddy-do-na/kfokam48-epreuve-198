@@ -74,9 +74,28 @@ paths:
                   sessionId: { type: integer }
                   etudiantId: { type: integer }
                   source: { type: string, enum: [ETUDIANT, FORMATEUR] }
-        '400': { description: code inconnu }
-        '409': { description: déjà présent }
-        '410': { description: code expiré }
+        '400':
+          description: code inconnu
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiError' }
+        '409':
+          description: déjà présent (y compris sur une soumission simultanée)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiError' }
+        '410':
+          description: code expiré
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiError' }
+        '429':
+          description: étudiant bloqué après 5 échecs (EF5, RG3)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiError' }
+      # Aucun 500 n'est contractuel sur ce parcours : les défauts de l'enveloppe
+      # étape 3 (issues 18, 19, 20) qui renvoyaient ERREUR_INTERNE sont corrigés.
 
   /api/exercices:
     post:
