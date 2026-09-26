@@ -72,13 +72,13 @@ public class PresenceService {
         verifierBlocage(etudiantId);
         CoursSession session = sessionRepository.findByCodeForUpdate(code.trim().toUpperCase()).orElse(null);
         if (session == null || !clock.instant().isBefore(session.getExpirationAt())) {
-            tentativeCodeService.enregistrerEchec(etudiant, clock.instant());
+            tentativeCodeService.enregistrerEchec(session, etudiant, clock.instant());
             throw new ApiException(session == null ? HttpStatus.BAD_REQUEST : HttpStatus.GONE,
                     session == null ? "CODE_INCONNU" : "CODE_EXPIRE",
                     session == null ? "Le code de présence est inconnu." : "Le code de présence a expiré.");
         }
         if (!session.getPromotion().getId().equals(etudiant.getPromotion().getId())) {
-            tentativeCodeService.enregistrerEchec(etudiant, clock.instant());
+            tentativeCodeService.enregistrerEchec(session, etudiant, clock.instant());
             throw new ApiException(HttpStatus.FORBIDDEN, "PROMOTION_INCORRECTE", "Cet étudiant ne fait pas partie de la promotion de la session.");
         }
         if (presenceRepository.existsBySessionIdAndEtudiantId(session.getId(), etudiantId)) {

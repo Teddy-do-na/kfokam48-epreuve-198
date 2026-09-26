@@ -35,7 +35,8 @@ public class TentativeCode {
     protected TentativeCode() {
     }
 
-    public TentativeCode(Etudiant etudiant, Instant createdAt) {
+    public TentativeCode(CoursSession session, Etudiant etudiant, Instant createdAt) {
+        this.session = session;
         this.etudiant = etudiant;
         this.createdAt = createdAt;
         this.reussie = false;

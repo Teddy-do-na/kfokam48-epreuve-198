@@ -1,5 +1,6 @@
 package com.kfokam48.backend.service;
 
+import com.kfokam48.backend.entity.CoursSession;
 import com.kfokam48.backend.entity.Etudiant;
 import com.kfokam48.backend.entity.TentativeCode;
 import com.kfokam48.backend.repository.TentativeCodeRepository;
@@ -16,9 +17,14 @@ public class TentativeCodeService {
         this.tentativeCodeRepository = tentativeCodeRepository;
     }
 
+    /**
+     * ISSUE 19 : la session est renseignée quand elle est connue (code expiré, promotion
+     * incorrecte). Pour un code totalement inconnu il n'y en a pas — V3 rend la colonne
+     * optionnelle — mais l'échec doit rester comptabilisé pour le blocage après 5 essais (EF5).
+     */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void enregistrerEchec(Etudiant etudiant, Instant instant) {
-        tentativeCodeRepository.save(new TentativeCode(etudiant, instant));
+    public void enregistrerEchec(CoursSession session, Etudiant etudiant, Instant instant) {
+        tentativeCodeRepository.save(new TentativeCode(session, etudiant, instant));
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)

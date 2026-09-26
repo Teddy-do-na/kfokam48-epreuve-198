@@ -42,8 +42,10 @@ class PresenceLockoutTest {
     @Test
     void bloqueLetudiantApresCinqEchecsPendantDeuxMinutes() {
         Etudiant student = new Etudiant("Étudiant A", new Promotion("Promotion A"));
+        // Session null assumée : V3 rend tentative_code.session_id optionnel (ISSUE 19)
         List<TentativeCode> failures = java.util.stream.IntStream.range(0, 5)
-                .mapToObj(index -> new TentativeCode(student, Instant.parse("2026-01-01T10:00:00Z").plusSeconds(4 - index)))
+                .mapToObj(index -> new TentativeCode(null, student,
+                        Instant.parse("2026-01-01T10:00:00Z").plusSeconds(4 - index)))
                 .toList();
         when(etudiantRepository.findById(1L)).thenReturn(Optional.of(student));
         when(tentativeCodeRepository.findByEtudiantIdAndCreatedAtAfterOrderByCreatedAtDesc(1L,
