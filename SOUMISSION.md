@@ -8,39 +8,32 @@
 
 ## Candidat
 
-| | |
-|---|---|
-| Nom et prénom(s) |KOMTA Teddy |
-| Matricule | KF48-198|
-| Centre | Yaoundé / Douala / Bafoussam |
-| Compte GitHub | Teddy-do-na|
+|                  |                              |
+| ---------------- | ---------------------------- |
+| Nom et prénom(s) | KOMTA Teddy                  |
+| Matricule        | KF48-198                     |
+| Centre           | Yaoundé / Douala / Bafoussam |
+| Compte GitHub    | Teddy-do-na                  |
 
 ## Projet
 
-| | |
-|---|---|
-| Dépôt (public) | `https://github.com/Teddy-do-na/kfokam48-epreuve-198` |
-| Commit final — hash complet, 40 caractères | |
-| Branche | `main` |
-
-## Épreuve Git — étape 5
-
-| | |
-|---|---|
-| Dépôt (public) | `https://github.com/<compte>/kfokam48-gitlab-<matricule>` |
-| Commit final — hash complet, 40 caractères | |
+|                                            |                                                       |
+| ------------------------------------------ | ----------------------------------------------------- |
+| Dépôt (public)                             | `https://github.com/Teddy-do-na/kfokam48-epreuve-198` |
+| Commit final — hash complet, 40 caractères |                                                       |
+| Branche                                    | `main`                                                |
 
 ## Technique
 
-| | |
-|---|---|
-| Frontend utilisé | React  |
-| Base de données |  |
-| Commandes de démarrage | |
+|                        |       |
+| ---------------------- | ----- |
+| Frontend utilisé       | React + vite +typescrit |
+| Base de données        |       |
+| Commandes de démarrage | frontend: npm backend: mvn sprint-boot:run      |
 
 ## Ce que j'ai livré
 
-*Trois à cinq lignes : ce qui fonctionne, ce qui ne fonctionne pas, ce que j'ai volontairement laissé de côté et pourquoi. Sois exact — un correcteur préfère un périmètre réduit et annoncé qu'une promesse non tenue.*
+j'ai livré tout le code frontend et backend en fonction des tickets que j'ai créés
 
 ---
 
@@ -57,4 +50,4 @@
 
 **Déclaration.** J'ai réalisé ce travail seul. Les outils d'IA étaient autorisés sans restriction et je les ai utilisés ; mon journal indique où et comment j'ai vérifié leurs réponses. Mes dépôts resteront publics et inchangés jusqu'à la publication des résultats.
 
-Signature : ______________________  Date : __________
+Signature : **********\_\_********** Date : ****\_\_****
