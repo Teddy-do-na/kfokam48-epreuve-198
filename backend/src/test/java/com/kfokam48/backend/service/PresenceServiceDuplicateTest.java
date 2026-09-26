@@ -2,6 +2,7 @@ package com.kfokam48.backend.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import com.kfokam48.backend.entity.CoursSession;
@@ -12,6 +13,7 @@ import com.kfokam48.backend.repository.CoursSessionRepository;
 import com.kfokam48.backend.repository.EtudiantRepository;
 import com.kfokam48.backend.repository.PresenceRepository;
 import com.kfokam48.backend.repository.TentativeCodeRepository;
+import java.sql.SQLException;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -21,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
@@ -56,5 +59,40 @@ class PresenceServiceDuplicateTest {
 
         assertEquals(409, exception.getStatus().value());
         assertEquals("DEJA_PRESENT", exception.getCode());
+    }
+
+    @Test
+    void renvoieConflitQuandLintegriteDeLaBaseRefuseLaDoublonSimultanee() {
+        preparerPresenceValide();
+        when(presenceRepository.saveAndFlush(any())).thenThrow(new DataIntegrityViolationException(
+                "UNIQUE (session_id, etudiant_id)", new SQLException("duplicate key", "23505")));
+
+        ApiException exception = assertThrows(ApiException.class, () -> service.marquer("ABC234", 1L));
+
+        assertEquals(409, exception.getStatus().value());
+        assertEquals("DEJA_PRESENT", exception.getCode());
+    }
+
+    @Test
+    void neMasquePasUneAutreViolationDIntegriteDerriereUn500() {
+        preparerPresenceValide();
+        when(presenceRepository.saveAndFlush(any())).thenThrow(new DataIntegrityViolationException(
+                "FK sur etudiant_id", new SQLException("foreign key", "23503")));
+
+        assertThrows(DataIntegrityViolationException.class, () -> service.marquer("ABC234", 1L),
+                "Seule une violation d'unicite doit etre traduite en 409");
+    }
+
+    private void preparerPresenceValide() {
+        Promotion promotion = new Promotion("Promotion A");
+        ReflectionTestUtils.setField(promotion, "id", 5L);
+        CoursSession session = new CoursSession("Cours Java", promotion, "ABC234",
+                Instant.parse("2026-01-01T10:00:00Z"), Instant.parse("2026-01-01T10:15:00Z"));
+        Etudiant etudiant = new Etudiant("Étudiant A", promotion);
+        ReflectionTestUtils.setField(session, "id", 2L);
+        ReflectionTestUtils.setField(etudiant, "id", 1L);
+        when(sessionRepository.findByCodeForUpdate("ABC234")).thenReturn(Optional.of(session));
+        when(etudiantRepository.findById(1L)).thenReturn(Optional.of(etudiant));
+        when(presenceRepository.existsBySessionIdAndEtudiantId(2L, 1L)).thenReturn(false);
     }
 }

@@ -49,7 +49,7 @@ class PresenceManuelleTest {
         ReflectionTestUtils.setField(etudiant, "id", 1L);
         when(sessionRepository.findByIdForUpdate(2L)).thenReturn(Optional.of(session));
         when(etudiantRepository.findById(1L)).thenReturn(Optional.of(etudiant));
-        when(presenceRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(presenceRepository.saveAndFlush(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
         var response = service.ajouterManuellement(2L, 1L);
 

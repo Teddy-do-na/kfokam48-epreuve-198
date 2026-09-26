@@ -10,11 +10,13 @@ import com.kfokam48.backend.repository.CoursSessionRepository;
 import com.kfokam48.backend.repository.EtudiantRepository;
 import com.kfokam48.backend.repository.PresenceRepository;
 import com.kfokam48.backend.repository.TentativeCodeRepository;
+import java.sql.SQLException;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import org.springframework.http.HttpStatus;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -60,7 +62,7 @@ public class PresenceService {
         if (presenceRepository.existsBySessionIdAndEtudiantId(sessionId, etudiantId)) {
             throw new ApiException(HttpStatus.CONFLICT, "DEJA_PRESENT", "La présence de cet étudiant est déjà enregistrée.");
         }
-        Presence saved = presenceRepository.save(new Presence(session, etudiant, "FORMATEUR"));
+        Presence saved = insererPresence(new Presence(session, etudiant, "FORMATEUR"));
         assignmentService.reassignerEnAttente(session);
         return new PresenceResponse(saved.getId(), sessionId, etudiantId, saved.getSource());
     }
@@ -85,9 +87,38 @@ public class PresenceService {
             throw new ApiException(HttpStatus.CONFLICT, "DEJA_PRESENT", "La présence de cet étudiant est déjà enregistrée.");
         }
         tentativeCodeService.reinitialiser(etudiantId, clock.instant());
-        Presence saved = presenceRepository.save(new Presence(session, etudiant, "ETUDIANT"));
+        Presence saved = insererPresence(new Presence(session, etudiant, "ETUDIANT"));
         assignmentService.reassignerEnAttente(session);
         return new PresenceResponse(saved.getId(), session.getId(), etudiantId, saved.getSource());
+    }
+
+    /**
+     * ISSUE 20 : le contrôle « déjà présent » puis l'insertion ne forment qu'une seule unité de
+     * travail. Si deux soumissions simultanées passent toutes les deux le contrôle, la seconde
+     * viole UNIQUE (session_id, etudiant_id) : elle doit recevoir 409 DEJA_PRESENT, jamais un
+     * 500 ERREUR_INTERNE.
+     */
+    private Presence insererPresence(Presence presence) {
+        try {
+            return presenceRepository.saveAndFlush(presence);
+        } catch (DataIntegrityViolationException exception) {
+            if (estDoublonDePresence(exception)) {
+                throw new ApiException(HttpStatus.CONFLICT, "DEJA_PRESENT",
+                        "La présence de cet étudiant est déjà enregistrée.");
+            }
+            throw exception;
+        }
+    }
+
+    private boolean estDoublonDePresence(DataIntegrityViolationException exception) {
+        Throwable cause = exception;
+        while (cause != null) {
+            if (cause instanceof SQLException sqlException) {
+                return "23505".equals(sqlException.getSQLState());
+            }
+            cause = cause.getCause();
+        }
+        return false;
     }
 
     private CoursSession trouverCodeActif(String code) {
